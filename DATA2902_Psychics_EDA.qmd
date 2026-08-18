@@ -1,0 +1,127 @@
+---
+title: "DATA2902_EDA"
+format: html
+editor: visual
+---
+
+Note: Insert code block is ctrl + alt + i
+
+Load libraries
+
+```{r}
+library(tidyverse)
+library(janitor)
+```
+
+Load dataset, clean column names, convert to appropriate data types, set strings to lowercase
+
+```{r}
+df <- read.csv("DATA2X02_2026_2_survey_clean.csv")
+glimpse(df)
+
+
+# CLEAN COLUMN NAMES
+df_clean_names <- clean_names(df)
+summary(df_clean_names)
+
+# REMOVE THE FIRST COLUMN (FULL RESPONSE)
+df_short <- df_clean_names[, -1]
+summary(df_short)
+colnames(df_short) <- c("age_years",
+                        "height_cm",
+                        "intl_dom_type",
+                        "2X02_type",
+                        "1X01_grade",
+                        "2X02_grade",
+                        "assessment_workflow",
+                        "travel_to_campus_min",
+                        "rent_y_n",
+                        "rent_dollars",
+                        "employment_hours",
+                        "sleep_hours",
+                        "music_type",
+                        "aliens_y_n",
+                        "water_l",
+                        "languages_number",
+                        "learning_pathway_n",
+                        "learning_pathway_why",
+                        "rev_lec_n",
+                        "rev_lec_why",
+                        "multitask_y_n",
+                        "multitask_n",
+                        "multitask_why")
+
+# FACTOR CATEGORICAL VARIABLES
+df_short <- df_short %>% 
+  mutate(across(c("intl_dom_type", 
+                  "2X02_type",
+                  "1X01_grade",
+                  "2X02_grade",
+                  "assessment_workflow",
+                  "rent_y_n",
+                  "music_type",
+                  "aliens_y_n",
+                  "languages_number",
+                  "learning_pathway_n",
+                  "rev_lec_n",
+                  "multitask_y_n"), as.factor))
+
+# CHANGE RELEVANT CATEGORICAL VARIABLES TO ORDINAL
+df_short <- df_short %>% 
+  mutate(across(c("1X01_grade", "2X02_grade"), 
+                ~ factor(.x, 
+                         levels = c("P", "CR", "D", "HD"), 
+                         ordered = TRUE)))
+
+# NOTE 1: I think assessment workflow should also be an ordinal variable but I'm not sure where to put "Other". Also should "immediately" and "gradually" be on the same level? 
+
+
+# EMPLOYMENT STATUS
+employment_y_n <- as.factor(ifelse(df_short$employment_hours > 0, "yes", "no"))
+df_short <- add_column(df_short, 
+                       employment_y_n = employment_y_n, 
+                       .before = "employment_hours")
+
+# SET ALL STRINGS TO LOWERCASE
+df_short <- df_short %>% 
+    mutate(learning_pathway_why = str_to_lower(learning_pathway_why)) %>%
+    mutate(multitask_why = str_to_lower(multitask_why))
+
+```
+
+### To Do:
+
+- Data cleaning
+
+### Problems inherent to the dataset: self-reported + response bias
+
+### view some plots
+
+```{r}
+hist(df_short$rent_dollars)
+```
+
+### export the df as csv
+
+```{r}
+# write.csv()
+```
+
+#### Random thoughts:
+
+Relationships to consider:
+
+- 1X01_grade is historical
+- 2X02_grade is future
+- 2X02_type and 1X01_grade and 2X02_grade and assessment_workflow
+- intl_dom_type and languages_number
+- learning_pathway affected by employment_hours and travel_to_campus_min
+- 2X02_grade affected by learning_pathway and assessment_workflow
+- rev_lec_why affected by travel_to_campus_min and multitask_y_n and multitask_why
+- ADHD LMAO (multitask_why)
+
+```{r}
+
+df_adhd_subset <- df_short %>% 
+    filter(str_detect(multitask_why, "adhd"))
+```
