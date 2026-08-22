@@ -159,19 +159,19 @@ write.csv(df_clean, "DATA2X02_data_cleaned.csv", row.names = F)
 ## FILTERING OUT UNREASONABLE RESPONSES (OUTDATED)
 
 ```{r}
-summary(df_short) #check distribution of answers 
+#summary(df_short) #check distribution of answers 
 
 #inspecting responses for suspicious ages  
-df_short[df_short$age_years > 30 | df_short$age_years < 16, ]  
+#df_short[df_short$age_years > 30 | df_short$age_years < 16, ]  
 
 #filtering out 94 year old due to unreasonable answers in other columns as well 
-df_clean <- df_short %>% filter(age_years != 94)  
+#df_clean <- df_short %>% filter(age_years != 94)  
 
 #replacing repsonses with ages less than 16 (not possible due to NSW laws) with median of responses 
-df_clean <- df_clean %>% mutate(age_years = ifelse(age_years <= 16, median(age_years), age_years))   
+#df_clean <- df_clean %>% mutate(age_years = ifelse(age_years <= 16, median(age_years), age_years))   
 
-quantile(df_short$age_years) 
-hist(df_short$age_years, breaks = 100)
+#quantile(df_short$age_years) 
+#hist(df_short$age_years, breaks = 100)
 ```
 
 - personally inspect unreasonable age responses. if other responses are reasonable, we concluded that it was a user error that caused a misinput for the age question and thus, we replace their age with the median value of the cohort

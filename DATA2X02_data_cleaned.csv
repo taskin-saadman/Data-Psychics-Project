@@ -1,4 +1,4 @@
-"intl_dom_type","2X02_type","assessment_workflow","workflow_grouped","rent_y_n","employment_y_n","multitask_y_n","multitask_n","1X01_grade","2X02_grade","travel_to_campus_min","rent_dollars","employment_hours","sleep_hours","water_l"
+"intl_dom_type","type_2X02","assessment_workflow","workflow_grouped","rent_y_n","employment_y_n","multitask_y_n","multitask_n","grade_1X01","grade_2X02","travel_to_campus_min","rent_dollars","employment_hours","sleep_hours","water_l"
 "Domestic","DATA2902","Gradually","Consistent","no","no","yes","['Other']","HD","HD",90,0,0,8,2
 "Domestic","DATA2002","Gradually","Consistent","yes","no","yes","['Social media', 'Emails', 'Other uni work']","D","HD",45,365,0,7,3
 "Domestic","DATA2002","Cram","Inconsistent","no","yes","no","[]","D","D",81,0,15,6,4
