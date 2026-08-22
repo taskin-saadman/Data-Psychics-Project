@@ -1,26 +1,29 @@
 library(shiny)
 library(tidyverse)
-library(car)
+library(rstatix)
+library(glue)
 
+#setwd("C:/Users/user/Downloads")
+#getwd()
 # Read csv
-df <- read_csv("../DATA2X02_data_cleaned.csv")
+df <- read_csv(".../DATA2X02_data_cleaned.csv", 
+               show_col_types = F)
 
 # Convert to factor
-df <- df %>%
-  mutate(across(c("intl_dom_type",
-                  "type_2X02",
-                  "assessment_workflow",
-                  "workflow_grouped",
-                  "rent_y_n",
-                  "employment_y_n",
-                  "multitask_y_n"), as.factor))
+df <- df %>% mutate(
+  across(c("intl_dom_type",
+           "type_2X02",
+           "assessment_workflow",
+           "workflow_grouped",
+           "rent_y_n",
+           "employment_y_n",
+           "multitask_y_n"), as.factor))
 
-df <- df %>%
-  mutate(across(c("grade_1X01", "grade_2X02"), 
-                ~ factor(.x, 
-                         levels = c("P", "CR", "D", "HD"), 
-                         ordered = TRUE)))
-
+df <- df %>% mutate(
+  across(c("grade_1X01", "grade_2X02"), 
+         ~ factor(.x, levels = c("P", "CR", "D", "HD"), 
+                  labels = 1:4,
+                  ordered = TRUE)))
 
 # Define numeric choices
 numeric_choices <- c("travel_to_campus_min",
@@ -41,7 +44,6 @@ nominal_choices <- c("intl_dom_type",
 # Define categorical ordinal choices
 ordinal_choices <- c("grade_1X01",
                      "grade_2X02")
-
 
 # Define UI for app that performs tests
 ui <- fluidPage(
@@ -66,14 +68,26 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'tab2'",
         selectInput(inputId = "drop2_xvar", 
-                    label = "Module 2 Test Options:", 
-                    choices = nominal_choices,
+                    label = "Grouping Variables: ", 
+                    choices = nominal_choices[-3],
                     selected = "intl_dom_type"),
-        selectInput(inputId = "drop2_yvar", 
-                    label = "Module 2 Test Options:", 
-                    choices = ordinal_choices,
-                    selected = "grade_1X01")
-      ),
+        radioButtons( 
+          inputId = "yvar_type", 
+          label = "Ordinal or Numerical Variables?", 
+          choices = c("Numerical", "Ordinal")),
+        conditionalPanel(
+          condition = "input.yvar_type == 'Numerical'",
+          selectInput(inputId = "drop2_yvar_num",
+                      label = "Numerical Variables: ",
+                      choices = numeric_choices,
+                      selected = "travel_to_campus_min")),
+        conditionalPanel(
+          condition = "input.yvar_type == 'Ordinal'",
+          selectInput(inputId = "drop2_yvar_ord",
+                      label = "Ordinal Variables: ",
+                      choices = ordinal_choices,
+                      selected = "grade_1X01"))
+        ),
       
       # Dropdown group for Tab 3
       conditionalPanel(
@@ -94,17 +108,62 @@ ui <- fluidPage(
       tabsetPanel(
         id = "selected_tab",
         tabPanel("Module 1 Tests", value = "tab1", textOutput("out1")),
-        tabPanel("Module 2 Tests", value = "tab2", textOutput("out2")),
+        tabPanel("Module 2 Tests", value = "tab2", verbatimTextOutput("out2")),
         tabPanel("Resampling Tests", value = "tab3", textOutput("out3"))
       )
     )
   )
 )
 
+
 server <- function(input, output) {
-  output.out1 <- renderText({ paste("You selected:", input$drop1) })
-  output.out2 <- renderText({ paste("You selected:", input$drop2) })
-  output.out3 <- renderText({ paste("You selected:", input$drop3) })
+  output$out1 <- renderText({ paste("You selected:", input$drop1) })
+  
+  output$out2 <- renderPrint({
+    xvar <- input$drop2_xvar
+  
+    if (input$yvar_type == "Numerical") {
+      yvar <- input$drop2_yvar_num
+      
+      #build formula for tests (R has some problem with strings when we use directly)
+      f <- as.formula(paste(yvar, "~", xvar))
+      
+      #conduct Levene's test for equal variance/homoscedasticity assumption
+      p_equal_var <- levene_test(f, data = df) %>% pull(p)
+      
+      if (p_equal_var < 0.05) {
+        return(list(glue("We will conduct a Welch's t-test, 
+                as the p-value for Levene's test = {p_equal_var} is 
+                less than the significance level of 0.05 (heteroscedasticity)."),
+                    
+                    df |> 
+                      t.test(formula = 
+                               f, data = _)))
+      } else {
+        return(list(glue("We will conduct a Student's t-test, 
+                       as the p-value for Levene's test = {p_equal_var} is 
+                       more than the significance level of 0.05 (homoscedasticity)."),
+                    
+                    df |> 
+                      t.test(formula = 
+                               f, var.equal = T, data = _)))
+      }
+  
+    } else {
+      yvar <- input$drop2_yvar_ord
+      
+      #build formula for tests (R has some problem with strings when we use directly)
+      f <- as.formula(paste(yvar, "~", xvar))
+      
+      #glue("We will conduct a Wilcoxon Rank-Sum test, 
+       #         as the chosen y variables are ordinal (categorical).")
+                  
+      #df |> wilcox.test(formula = f, paired = F)
+    }
+  })
+    
+  
+  output$out3 <- renderText({ paste("You selected:", input$drop3) })
 }
 
 shinyApp(ui = ui, server = server)
