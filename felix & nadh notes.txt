@@ -1,0 +1,28 @@
+CATEGORICAL (two groups)
+- international/domestic 
+- 2002/2902
+- uni assessments attitude
+- rent/no rent
+- lecture multitasking
+- employment status (created variable)
+
+ORDINAL
+- 1X01 grades
+- 2x02 aspirational grades
+
+NUMERICAL
+- commute time
+- rent paid pw
+- working hours
+- sleep
+- water
+
+will need THREE different tests to compare two groups, assume normal fulfilled for all groupings as we have n > 30:
+- two sample t-test (student's t-test) if numerical & equal variance: t.test(numeric_variable ~ grouping_variable, data = your_data_frame)
+- welch t-test if numerical & non-equal variance: t.test(numeric_variable ~ grouping_variable, data = your_data_frame, var.equal = T)
+- Wilcoxon rank-sum test/mann-whitney u test: wilcox.test(DV ~ IV, data = dataframe, paired = F)
+
+
+REFERENCES USED FOR DATA CLEANING:
+https://www.health.harvard.edu/staying-healthy/how-much-water-should-you-drink
+https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work
