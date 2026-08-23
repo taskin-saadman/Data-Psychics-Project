@@ -6,7 +6,7 @@ library(glue)
 #setwd("C:/Users/user/Downloads")
 #getwd()
 # Read csv
-df <- read_csv(".../DATA2X02_data_cleaned.csv", 
+df <- read_csv("../DATA2X02_data_cleaned.csv", 
                show_col_types = F)
 
 # Convert to factor
@@ -19,11 +19,22 @@ df <- df %>% mutate(
            "employment_y_n",
            "multitask_y_n"), as.factor))
 
+# df <- df %>% mutate(
+#   across(c("grade_1X01", "grade_2X02"), 
+#          ~ factor(.x, levels = c("P", "CR", "D", "HD"), 
+#                   labels = 1:4,
+#                   ordered = TRUE)))
+
+# Convert to numeric for ordinal factors
 df <- df %>% mutate(
   across(c("grade_1X01", "grade_2X02"), 
-         ~ factor(.x, levels = c("P", "CR", "D", "HD"), 
-                  labels = 1:4,
-                  ordered = TRUE)))
+         ~ case_when(
+           .x == "P" ~ 1, 
+           .x == "CR" ~ 2, 
+           .x == "D" ~ 3, 
+           .x == "HD" ~ 4)
+         )
+  )
 
 # Define numeric choices
 numeric_choices <- c("travel_to_campus_min",
@@ -119,6 +130,7 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$out1 <- renderText({ paste("You selected:", input$drop1) })
   
+  # MODULE 2 TESTS
   output$out2 <- renderPrint({
     xvar <- input$drop2_xvar
   
@@ -155,10 +167,11 @@ server <- function(input, output) {
       #build formula for tests (R has some problem with strings when we use directly)
       f <- as.formula(paste(yvar, "~", xvar))
       
-      #glue("We will conduct a Wilcoxon Rank-Sum test, 
-       #         as the chosen y variables are ordinal (categorical).")
+      
+      return(list(glue("We will conduct a Wilcoxon Rank-Sum test, 
+                       as the chosen y -ariables are ordinal (categorical)."),
                   
-      #df |> wilcox.test(formula = f, paired = F)
+      wilcox.test(formula = f, data = df)))
     }
   })
     
