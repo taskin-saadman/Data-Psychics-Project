@@ -125,6 +125,17 @@ ui <- fluidPage(
             label = "Categorical variable 2:",
             choices = nominal_choices,
             selected = "employment_y_n"
+          ),
+          
+          radioButtons(
+            inputId = "q1_ind_display",
+            label = "Display:",
+            choices = c(
+              "Observed counts",
+              "Expected counts",
+              "Row proportions"
+            ),
+            selected = "Observed counts"
           )
         ),
         
@@ -339,7 +350,7 @@ ui <- fluidPage(
                 "is associated with paid employment status."
               ),
               
-              h4("Contingency Table"),
+              h4("Contingency Table Display"),
               
               tableOutput("q1_ind_table"),
               
@@ -594,20 +605,49 @@ server <- function(input, output) {
   })
   
   
-  output$q1_ind_table <- renderTable({
-    q1_ind_table()
-  }, rownames = TRUE)
-  
-  
   # -------------------------------------------------------
   # QUESTION 1 - CHI-SQUARE INDEPENDENCE TEST
   # -------------------------------------------------------
-  output$q1_chi_independence <- renderPrint({
+  q1_ind_test <- reactive({
     
     chisq.test(
       q1_ind_table(),
       correct = FALSE
     )
+  })
+  
+  
+  output$q1_ind_table <- renderTable({
+    
+    req(input$q1_ind_display)
+    
+    if (input$q1_ind_display == "Observed counts") {
+      
+      q1_ind_table()
+      
+    } else if (input$q1_ind_display == "Expected counts") {
+      
+      round(
+        q1_ind_test()$expected,
+        2
+      )
+      
+    } else {
+      
+      round(
+        prop.table(
+          q1_ind_table(),
+          margin = 1
+        ),
+        3
+      )
+    }
+    
+  }, rownames = TRUE)
+  
+  
+  output$q1_chi_independence <- renderPrint({
+    q1_ind_test()
   })
   
   
