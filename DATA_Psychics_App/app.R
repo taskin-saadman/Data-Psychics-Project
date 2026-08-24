@@ -339,6 +339,10 @@ ui <- fluidPage(
                 "is associated with paid employment status."
               ),
               
+              h4("Contingency Table"),
+              
+              tableOutput("q1_ind_table"),
+              
               verbatimTextOutput("q1_chi_independence")
             ),
             
@@ -566,6 +570,33 @@ server <- function(input, output) {
       input$drop3_xvar
     )
   })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - INDEPENDENCE CONTINGENCY TABLE
+  # -------------------------------------------------------
+  q1_ind_table <- reactive({
+    
+    req(input$q1_ind_x, input$q1_ind_y)
+    
+    validate(
+      need(
+        input$q1_ind_x != input$q1_ind_y,
+        "Please select two different categorical variables."
+      )
+    )
+    
+    table(
+      df[[input$q1_ind_x]],
+      df[[input$q1_ind_y]],
+      dnn = c(input$q1_ind_x, input$q1_ind_y)
+    )
+  })
+  
+  
+  output$q1_ind_table <- renderTable({
+    q1_ind_table()
+  }, rownames = TRUE)
   
   
   # -------------------------------------------------------
