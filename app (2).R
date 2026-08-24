@@ -1,0 +1,201 @@
+library(shiny)
+library(tidyverse)
+library(rstatix)
+library(glue)
+
+#setwd("C:/Users/user/Downloads")
+#getwd()
+# Read csv
+df <- read_csv("DATA2X02_data_cleaned.csv", 
+               show_col_types = F)
+
+# Convert to factor
+df <- df %>% mutate(
+  across(c("intl_dom_type",
+           "type_2X02",
+           "assessment_workflow",
+           "workflow_grouped",
+           "rent_y_n",
+           "employment_y_n",
+           "multitask_y_n"), as.factor))
+
+# df <- df %>% mutate(
+#   across(c("grade_1X01", "grade_2X02"), 
+#          ~ factor(.x, levels = c("P", "CR", "D", "HD"), 
+#                   labels = 1:4,
+#                   ordered = TRUE)))
+
+# Convert to numeric for ordinal factors
+df <- df %>% mutate(
+  across(c("grade_1X01", "grade_2X02"), 
+         ~ case_when(
+           .x == "P" ~ 1, 
+           .x == "CR" ~ 2, 
+           .x == "D" ~ 3, 
+           .x == "HD" ~ 4)
+         )
+  )
+
+# Define numeric choices
+numeric_choices <- c("travel_to_campus_min",
+                     "rent_dollars", 
+                     "employment_hours",
+                     "sleep_hours", 
+                     "water_l")
+
+# Define categorical nominal choices
+nominal_choices <- c("intl_dom_type",
+                     "type_2X02",
+                     "assessment_workflow",
+                     "workflow_grouped", 
+                     "rent_y_n", 
+                     "employment_y_n", 
+                     "multitask_y_n")
+
+# Define categorical ordinal choices
+ordinal_choices <- c("grade_1X01",
+                     "grade_2X02")
+
+# Define UI for app that performs tests
+ui <- fluidPage(
+  tags$head(
+    includeCSS("stylestwo.css")
+  ),
+  
+  div(class = "report-container",
+      
+      div(class = "report-header",
+          h1("DATA2902 Psychics Tests", class = "my-custom-title"),
+          div(class = "report-meta",
+              span(tags$strong("Course:"), " DATA2902"),
+              span(tags$strong("Module:"), " Hypothesis Testing")
+          ),
+          hr(class = "header-separator")
+      ),
+      
+      tags$section(
+        h2("Statistical Modules", class = "my-custom-title"),
+        p("Select the variables and test modules below to dynamically generate statistical outputs.", class = "my-custom-desc"),
+        
+        sidebarLayout(
+          sidebarPanel(
+            conditionalPanel(
+              condition = "input.selected_tab == 'tab1'",
+              selectInput(inputId = "drop1_xvar", 
+                          label = "Module 1 Test Options:", 
+                          choices = nominal_choices,
+                          selected = "intl_dom_type"),
+              selectInput(inputId = "drop1_yvar", 
+                          label = "Module 1 Test Options:", 
+                          choices = numeric_choices,
+                          selected = "rent_dollars")
+            ),
+            
+            conditionalPanel(
+              condition = "input.selected_tab == 'tab2'",
+              selectInput(inputId = "drop2_xvar", 
+                          label = "Grouping Variables: ", 
+                          choices = nominal_choices[-3],
+                          selected = "intl_dom_type"),
+              radioButtons( 
+                inputId = "yvar_type", 
+                label = "Ordinal or Numerical Variables?", 
+                choices = c("Numerical", "Ordinal")),
+              conditionalPanel(
+                condition = "input.yvar_type == 'Numerical'",
+                selectInput(inputId = "drop2_yvar_num",
+                            label = "Numerical Variables: ",
+                            choices = numeric_choices,
+                            selected = "travel_to_campus_min")),
+              conditionalPanel(
+                condition = "input.yvar_type == 'Ordinal'",
+                selectInput(inputId = "drop2_yvar_ord",
+                            label = "Ordinal Variables: ",
+                            choices = ordinal_choices,
+                            selected = "grade_1X01"))
+            ),
+            
+            conditionalPanel(
+              condition = "input.selected_tab == 'tab3'",
+              selectInput(inputId = "drop3_xvar", 
+                          label = "Module 3 Test Options:", 
+                          choices = nominal_choices,
+                          selected = "intl_dom_type"),
+              selectInput(inputId = "drop3_yvar", 
+                          label = "Module 3 Test Options:", 
+                          choices = numeric_choices,
+                          selected = "rent_dollars")
+            )
+          ),
+          
+          mainPanel(
+            div(class = "interpretation-box",
+                tabsetPanel(
+                  id = "selected_tab",
+                  tabPanel("Module 1 Tests", value = "tab1", textOutput("out1")),
+                  tabPanel("Module 2 Tests", value = "tab2", verbatimTextOutput("out2")),
+                  tabPanel("Resampling Tests", value = "tab3", textOutput("out3"))
+                )
+            )
+          )
+        ) 
+      ) 
+  ) 
+)
+
+server <- function(input, output) {
+  output$out1 <- renderText({ paste("You selected:", input$drop1) })
+  
+  # MODULE 2 TESTS
+  output$out2 <- renderPrint({
+    xvar <- input$drop2_xvar
+  
+    if (input$yvar_type == "Numerical") {
+      yvar <- input$drop2_yvar_num
+      
+      #build formula for tests (R has some problem with strings when we use directly)
+      f <- as.formula(paste(yvar, "~", xvar))
+      
+      #conduct Levene's test for equal variance/homoscedasticity assumption
+      p_equal_var <- levene_test(f, data = df) %>% pull(p)
+      
+      if (p_equal_var < 0.05) {
+        return(list(glue("We will conduct a Welch's t-test, 
+                as the p-value for Levene's test = {p_equal_var} is 
+                less than the significance level of 0.05 (heteroscedasticity)."),
+                    
+                    df |> 
+                      t.test(formula = 
+                               f, data = _)))
+      } else {
+        return(list(glue("We will conduct a Student's t-test, 
+                       as the p-value for Levene's test = {p_equal_var} is 
+                       more than the significance level of 0.05 (homoscedasticity)."),
+                    
+                    df |> 
+                      t.test(formula = 
+                               f, var.equal = T, data = _)))
+      }
+  
+    } else {
+      yvar <- input$drop2_yvar_ord
+      
+      #build formula for tests (R has some problem with strings when we use directly)
+      f <- as.formula(paste(yvar, "~", xvar))
+      
+      
+      return(list(glue("We will conduct a Wilcoxon Rank-Sum test, 
+                       as the chosen y -ariables are ordinal (categorical)."),
+                  
+      wilcox.test(formula = f, data = df)))
+    }
+  })
+    
+  
+  output$out3 <- renderText({ paste("You selected:", input$drop3) })
+}
+
+shinyApp(ui = ui, server = server)
+
+
+
