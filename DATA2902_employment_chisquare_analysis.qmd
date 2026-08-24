@@ -1,0 +1,566 @@
+---
+title: "Employment, DATA2002/DATA2902 Enrolment, and Weekly Paid Work"
+subtitle: "Chi-square analysis with adjustment for Domestic/International student mix"
+format:
+  html:
+    toc: true
+    code-fold: false
+    embed-resources: true
+editor: source
+---
+
+## Research question
+
+> **Is being in paid employment associated with enrolment in DATA2002 versus DATA2902, and among employed students, do DATA2902 students work fewer hours per week than DATA2002 students, once the different mix of domestic and international students is taken into account?**
+
+This research question has **two distinct outcomes**, so it cannot be answered by one chi-square test alone.
+
+1. **Paid employment status** is categorical (`yes` / `no`). A chi-square test is appropriate for investigating its association with course enrolment.
+2. **Weekly hours of paid employment** is numerical. A chi-square test is **not** appropriate for comparing hours worked. Among employed students, this part of the question is addressed using a linear model that adjusts for Domestic/International student status.
+3. Domestic/International status may act as a **confounding variable**, because the proportions of domestic and international students may differ between DATA2002 and DATA2902, and employment patterns may also differ between those groups. A Cochran–Mantel–Haenszel (CMH) chi-square test is therefore used to assess the employment-course association **while stratifying by Domestic/International status**.
+
+The analysis below therefore uses:
+
+- a **Pearson chi-square test of independence** for the unadjusted association between course and paid employment;
+- the equivalent **chi-square homogeneity interpretation** of the same contingency table;
+- a **Cochran–Mantel–Haenszel chi-square test** to adjust that association for Domestic/International student status;
+- an **adjusted linear regression** among employed students to compare weekly employment hours between DATA2002 and DATA2902 while controlling for Domestic/International status.
+
+A chi-square **goodness-of-fit** test is discussed separately. It is not a primary test for this research question because no external or pre-specified hypothesised employment proportions were supplied.
+
+## Load libraries
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(janitor)
+```
+
+## Import and prepare the data
+
+The analysis uses only the variables required for the research question:
+
+- Domestic/International status;
+- DATA2002/DATA2902 enrolment;
+- weekly hours in paid employment.
+
+The original cleaning workflow removed employment-hour responses above 57 hours per week. The same rule is retained here so that this analysis is consistent with the cleaned dataset used elsewhere in the project.
+
+```{r}
+# Locate the survey CSV in the same folder as this .qmd file.
+csv_candidates <- list.files(
+  pattern = "^DATA2X02_2026_2_survey_clean.*\\.csv$",
+  ignore.case = TRUE
+)
+
+if (length(csv_candidates) == 0) {
+  stop("No DATA2X02 survey CSV was found in the working directory.")
+}
+
+if (length(csv_candidates) > 1) {
+  message(
+    "More than one matching CSV was found. Using: ",
+    csv_candidates[1]
+  )
+}
+
+raw <- read.csv(csv_candidates[1], check.names = FALSE)
+
+df <- raw |>
+  transmute(
+    intl_dom_type =
+      `Are you an International or Domestic student?`,
+
+    type_2X02 =
+      `Are you in DATA2002 or DATA2902?`,
+
+    employment_hours =
+      `On average, how many hours a week do you spend in paid employment? (hours)`
+  ) |>
+  mutate(
+    employment_hours = as.numeric(employment_hours)
+  ) |>
+  filter(
+    !is.na(intl_dom_type),
+    !is.na(type_2X02),
+    !is.na(employment_hours),
+    employment_hours >= 0,
+    employment_hours <= 57
+  ) |>
+  mutate(
+    intl_dom_type = factor(
+      intl_dom_type,
+      levels = c("Domestic", "International")
+    ),
+    type_2X02 = factor(
+      type_2X02,
+      levels = c("DATA2002", "DATA2902")
+    ),
+    employment_y_n = factor(
+      if_else(employment_hours > 0, "yes", "no"),
+      levels = c("no", "yes")
+    )
+  )
+
+glimpse(df)
+```
+
+### Sample size after cleaning
+
+```{r}
+nrow(df)
+```
+
+`employment_y_n` is derived from the numerical employment-hours response:
+
+- `0` hours is classified as **not in paid employment**;
+- more than `0` hours is classified as **in paid employment**.
+
+This avoids relying on a separate subjective yes/no employment question and ensures that employment status is internally consistent with reported weekly employment hours.
+
+---
+
+# Part 1: Is paid employment associated with DATA2002 versus DATA2902?
+
+## Descriptive contingency table
+
+Before performing a hypothesis test, the observed counts and within-course proportions should be inspected.
+
+```{r}
+employment_course_table <- table(
+  Course = df$type_2X02,
+  Employment = df$employment_y_n
+)
+
+employment_course_table
+```
+
+### Employment proportions within each course
+
+```{r}
+round(
+  prop.table(employment_course_table, margin = 1),
+  3
+)
+```
+
+The row proportions answer the descriptive question:
+
+> What proportion of DATA2002 students and what proportion of DATA2902 students report being in paid employment?
+
+These proportions are useful descriptively, but a formal hypothesis test is required to determine whether the observed difference is larger than would reasonably be expected from random sampling variation.
+
+---
+
+## Chi-square test of independence
+
+### Why this test?
+
+A **chi-square test of independence** is appropriate because both variables are categorical:
+
+- course enrolment: `DATA2002` or `DATA2902`;
+- paid employment: `yes` or `no`.
+
+The question is whether the two categorical variables are statistically associated.
+
+### Hypotheses
+
+\[
+H_0:\ \text{Course enrolment and paid employment status are independent.}
+\]
+
+Equivalently,
+
+\[
+P(\text{employed}\mid\text{DATA2002})
+=
+P(\text{employed}\mid\text{DATA2902}).
+\]
+
+The alternative hypothesis is
+
+\[
+H_A:\ \text{Course enrolment and paid employment status are associated.}
+\]
+
+That is, the employment proportions are not the same across the two courses.
+
+### Carry out the test
+
+```{r}
+chi_independence <- chisq.test(
+  employment_course_table,
+  correct = FALSE
+)
+
+chi_independence
+```
+
+`correct = FALSE` requests the ordinary Pearson chi-square statistic rather than Yates' continuity correction.
+
+### Check the expected-count assumption
+
+The chi-square approximation is normally considered suitable when expected cell counts are sufficiently large.
+
+```{r}
+round(chi_independence$expected, 2)
+```
+
+```{r}
+min(chi_independence$expected)
+```
+
+All expected counts should be inspected. If expected counts were very small, Fisher's exact test would be preferable for a 2-by-2 table.
+
+### Test statistic and p-value
+
+```{r}
+chi_independence$statistic
+chi_independence$parameter
+chi_independence$p.value
+```
+
+The Pearson test statistic is
+
+\[
+\chi^2 =
+\text{`r round(unname(chi_independence$statistic), 3)`}
+\]
+
+with
+
+\[
+df =
+\text{`r unname(chi_independence$parameter)`}
+\]
+
+and
+
+\[
+p =
+\text{`r signif(chi_independence$p.value, 4)`}.
+\]
+
+At a significance level of \(\alpha = 0.05\),
+
+```{r}
+if (chi_independence$p.value < 0.05) {
+  cat(
+    "There is evidence of an unadjusted association between ",
+    "course enrolment and paid employment status."
+  )
+} else {
+  cat(
+    "There is insufficient evidence of an unadjusted association between ",
+    "course enrolment and paid employment status."
+  )
+}
+```
+
+Importantly, this is an **unadjusted** result. It does not yet account for the different proportions of Domestic and International students in the two courses.
+
+---
+
+# Chi-square test of homogeneity
+
+## Why homogeneity and independence look identical here
+
+A chi-square **homogeneity** test asks whether the distribution of a categorical response is the same across several populations.
+
+For this study, we could frame the groups as two populations:
+
+- DATA2002 students;
+- DATA2902 students.
+
+The categorical response is employment status:
+
+- employed;
+- not employed.
+
+The hypotheses would then be
+
+\[
+H_0:
+\text{the employment-status proportions are homogeneous across DATA2002 and DATA2902}
+\]
+
+versus
+
+\[
+H_A:
+\text{the employment-status proportions differ between the courses}.
+\]
+
+The calculation is:
+
+```{r}
+chi_homogeneity <- chisq.test(
+  employment_course_table,
+  correct = FALSE
+)
+
+chi_homogeneity
+```
+
+For a contingency table such as this one, the Pearson chi-square **homogeneity test and independence test produce the same chi-square statistic, degrees of freedom, and p-value**.
+
+They differ mainly in the way the study is conceptualised:
+
+- **Independence:** Are the two variables associated within one sampled population?
+- **Homogeneity:** Is the distribution of employment status the same across the two course groups?
+
+Therefore, these should **not** be interpreted as two separate pieces of statistical evidence. They are two interpretations of the same 2-by-2 Pearson chi-square analysis.
+
+---
+
+# Why a goodness-of-fit test is not the main test here
+
+A chi-square **goodness-of-fit** test is different from the preceding tests.
+
+It compares the observed counts for **one categorical variable** with a set of **pre-specified theoretical proportions**.
+
+For example, if a theory or external source stated before examining the data that
+
+\[
+60\%
+\]
+
+of students should be employed and
+
+\[
+40\%
+\]
+
+should not be employed, a goodness-of-fit test could assess whether the observed employment distribution differs from 60:40.
+
+However, the current research question does **not** specify any hypothesised employment proportion. It asks whether employment is associated with **another observed variable**, course enrolment. Therefore, inventing a 50:50 or other expected proportion solely to perform a goodness-of-fit test would not answer the research question.
+
+### Optional goodness-of-fit template
+
+The following code is deliberately **not evaluated**. It should only be used if a defensible hypothesised employment proportion is supplied independently of this dataset.
+
+```{r}
+#| eval: false
+
+# Example ONLY:
+# Suppose the pre-specified hypothesis were:
+# 60% employed, 40% not employed.
+
+observed_employment <- table(df$employment_y_n)
+
+chisq.test(
+  observed_employment,
+  p = c(0.40, 0.60)
+)
+```
+
+The ordering of the hypothesised proportions must correspond to the factor levels:
+
+```{r}
+levels(df$employment_y_n)
+```
+
+which are `"no"` followed by `"yes"`.
+
+---
+
+# Part 2: Does Domestic/International status explain the apparent association?
+
+The research question explicitly says:
+
+> "...once the different mix of domestic and international students is taken into account."
+
+This matters because Domestic/International status could be related to both:
+
+1. which course a student is enrolled in; and
+2. whether a student is in paid employment.
+
+If so, simply comparing DATA2002 and DATA2902 could give a misleading result.
+
+## Examine the course composition
+
+```{r}
+course_student_type <- table(
+  Course = df$type_2X02,
+  Student_type = df$intl_dom_type
+)
+
+course_student_type
+```
+
+### Domestic/International proportions within course
+
+```{r}
+round(
+  prop.table(course_student_type, margin = 1),
+  3
+)
+```
+
+## Examine employment within each Domestic/International stratum
+
+```{r}
+employment_by_stratum <- df |>
+  count(
+    intl_dom_type,
+    type_2X02,
+    employment_y_n
+  ) |>
+  group_by(
+    intl_dom_type,
+    type_2X02
+  ) |>
+  mutate(
+    proportion = n / sum(n)
+  ) |>
+  ungroup()
+
+employment_by_stratum
+```
+
+A more compact table of the employed proportions is:
+
+```{r}
+df |>
+  group_by(
+    intl_dom_type,
+    type_2X02
+  ) |>
+  summarise(
+    n = n(),
+    employed_n = sum(employment_y_n == "yes"),
+    employed_prop = mean(employment_y_n == "yes"),
+    .groups = "drop"
+  )
+```
+
+These stratified proportions help determine whether the apparent overall course difference remains once Domestic and International students are compared more fairly.
+
+---
+
+# Cochran–Mantel–Haenszel chi-square test
+
+## Why use this test?
+
+The ordinary Pearson chi-square test ignores Domestic/International student status.
+
+The **Cochran–Mantel–Haenszel (CMH) test** examines the association between two binary categorical variables while **controlling for a third categorical stratification variable**.
+
+Here:
+
+- exposure/group variable = DATA2002 versus DATA2902;
+- outcome = employed versus not employed;
+- stratification variable = Domestic versus International.
+
+This directly addresses the categorical part of the phrase:
+
+> "once the different mix of domestic and international students is taken into account."
+
+### Hypotheses
+
+Conditional on Domestic/International status,
+
+\[
+H_0:
+\text{course enrolment and paid employment are independent}
+\]
+
+against
+
+\[
+H_A:
+\text{there is an association between course and paid employment}.
+\]
+
+In odds-ratio form, the null hypothesis is
+
+\[
+H_0:\ \theta_{MH}=1,
+\]
+
+where \(\theta_{MH}\) is the common odds ratio across the Domestic and International strata.
+
+## Construct the 2 × 2 × 2 table
+
+```{r}
+cmh_table <- xtabs(
+  ~ type_2X02 + employment_y_n + intl_dom_type,
+  data = df
+)
+
+cmh_table
+```
+
+## Carry out the Mantel–Haenszel test
+
+```{r}
+cmh_test <- mantelhaen.test(
+  cmh_table,
+  correct = FALSE
+)
+
+cmh_test
+```
+
+### Extract the result
+
+```{r}
+cmh_test$statistic
+cmh_test$p.value
+cmh_test$estimate
+cmh_test$conf.int
+```
+
+The adjusted CMH test gives
+
+\[
+\chi^2_{MH}
+=
+\text{`r round(unname(cmh_test$statistic), 3)`}
+\]
+
+with
+
+\[
+p =
+\text{`r signif(cmh_test$p.value, 4)`}.
+\]
+
+The estimated common odds ratio is
+
+\[
+\widehat{\theta}_{MH}
+=
+\text{`r round(unname(cmh_test$estimate), 3)`}.
+\]
+
+Because of the factor ordering used above, this common odds ratio can be interpreted as the odds of being employed for DATA2902 relative to DATA2002, after stratifying by Domestic/International status.
+
+Its 95% confidence interval is
+
+\[
+(
+\text{`r round(cmh_test$conf.int[1], 3)`},
+\text{`r round(cmh_test$conf.int[2], 3)`}
+).
+\]
+
+```{r}
+if (cmh_test$p.value < 0.05) {
+  cat(
+    "After controlling for Domestic/International student status, ",
+    "there is evidence that paid employment remains associated with course enrolment."
+  )
+} else {
+  cat(
+    "After controlling for Domestic/International student status, ",
+    "there is insufficient evidence that paid employment remains associated with course enrolment."
+  )
+}
+```
+
+## AI Acknowledgement
+This document was developed using GPT-5.6 Sol as a baseline and starting point for the analysis, structure, and statistical approach. All content, interpretations, code, and conclusions were subsequently reviewed, modified, and verified by the authors.
+
