@@ -88,16 +88,50 @@ ui <- fluidPage(
         
         h4("Question 1"),
         
-        p(
-          "The variables for this analysis are fixed by the research question."
+        conditionalPanel(
+          condition = "input.q1_tab == 'introduction'",
+          
+          p(
+            "The variables for this analysis are fixed by the research question."
+          ),
+          
+          tags$strong("Variables used:"),
+          
+          tags$ul(
+            tags$li("Course enrolment"),
+            tags$li("Paid employment status"),
+            tags$li("Domestic/International student status")
+          )
         ),
         
-        tags$strong("Variables used:"),
+        conditionalPanel(
+          condition = "input.q1_tab == 'independence'",
+          
+          tags$strong("Pearson Chi-square Test of Independence"),
+          
+          p(
+            "Variables: course enrolment and paid employment status."
+          )
+        ),
         
-        tags$ul(
-          tags$li("Course enrolment"),
-          tags$li("Paid employment status"),
-          tags$li("Domestic/International student status")
+        conditionalPanel(
+          condition = "input.q1_tab == 'homogeneity'",
+          
+          tags$strong("Chi-square Test of Homogeneity"),
+          
+          p(
+            "Compares the distribution of employment status across courses."
+          )
+        ),
+        
+        conditionalPanel(
+          condition = "input.q1_tab == 'cmh'",
+          
+          tags$strong("Cochran-Mantel-Haenszel Chi-square Test"),
+          
+          p(
+            "Controls for Domestic/International student status."
+          )
         )
       ),
       
