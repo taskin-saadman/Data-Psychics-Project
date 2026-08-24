@@ -74,7 +74,7 @@ ordinal_choices <- c(
 
 ui <- fluidPage(
   
-  titlePanel("DATA2902 Physics Tests"),
+  titlePanel("DATA2902 Psychics"),
   
   sidebarLayout(
     
