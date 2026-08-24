@@ -110,7 +110,21 @@ ui <- fluidPage(
           tags$strong("Pearson Chi-square Test of Independence"),
           
           p(
-            "Variables: course enrolment and paid employment status."
+            "Select two categorical variables to examine their association."
+          ),
+          
+          selectInput(
+            inputId = "q1_ind_x",
+            label = "Categorical variable 1:",
+            choices = nominal_choices,
+            selected = "type_2X02"
+          ),
+          
+          selectInput(
+            inputId = "q1_ind_y",
+            label = "Categorical variable 2:",
+            choices = nominal_choices,
+            selected = "employment_y_n"
           )
         ),
         
