@@ -78,14 +78,14 @@ ui <- fluidPage(
   
   sidebarLayout(
     
-    sidebarPanel(
+            sidebarPanel(
       
       # ---------------------------------------------------
       # Module 1 sidebar options
       # ---------------------------------------------------
       conditionalPanel(
         condition = "input.module_tab == 'module1'",
-        
+
         selectInput(
           inputId = "drop1_xvar",
           label = "Module 1 Test Options:",
@@ -147,7 +147,7 @@ ui <- fluidPage(
       
       # ---------------------------------------------------
       # Resampling Tests sidebar options
-      # ---------------------------------------------------
+          # ---------------------------------------------------
       conditionalPanel(
         condition = "input.module_tab == 'resampling'",
         
@@ -166,7 +166,7 @@ ui <- fluidPage(
         )
       )
     ),
-    
+
     
     # =====================================================
     # MAIN PANEL
