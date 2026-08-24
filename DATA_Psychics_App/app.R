@@ -3,10 +3,11 @@ library(tidyverse)
 library(rstatix)
 library(glue)
 
-#setwd("C:/Users/user/Downloads")
-#getwd()
+setwd("C:/Users/user/Desktop/DATA2902-Psychics") #or wherever you cloned the repo in
+getwd()
+
 # Read csv
-df <- read_csv("../DATA2X02_data_cleaned.csv", 
+df <- read_csv("DATA2X02_data_cleaned.csv", 
                show_col_types = F)
 
 # Convert to factor
@@ -18,12 +19,6 @@ df <- df %>% mutate(
            "rent_y_n",
            "employment_y_n",
            "multitask_y_n"), as.factor))
-
-# df <- df %>% mutate(
-#   across(c("grade_1X01", "grade_2X02"), 
-#          ~ factor(.x, levels = c("P", "CR", "D", "HD"), 
-#                   labels = 1:4,
-#                   ordered = TRUE)))
 
 # Convert to numeric for ordinal factors
 df <- df %>% mutate(
@@ -119,7 +114,12 @@ ui <- fluidPage(
       tabsetPanel(
         id = "selected_tab",
         tabPanel("Module 1 Tests", value = "tab1", textOutput("out1")),
-        tabPanel("Module 2 Tests", value = "tab2", verbatimTextOutput("out2")),
+        tabPanel("Module 2 Tests", value = "tab2", 
+                 #first output
+                 verbatimTextOutput("out2_tests"),
+                 
+                 #second output
+                 withMathJax(uiOutput("out2_text"))),
         tabPanel("Resampling Tests", value = "tab3", textOutput("out3"))
       )
     )
@@ -131,7 +131,7 @@ server <- function(input, output) {
   output$out1 <- renderText({ paste("You selected:", input$drop1) })
   
   # MODULE 2 TESTS
-  output$out2 <- renderPrint({
+  output$out2_tests <- renderPrint({
     xvar <- input$drop2_xvar
   
     if (input$yvar_type == "Numerical") {
@@ -175,6 +175,14 @@ server <- function(input, output) {
     }
   })
     
+  
+  output$out2_text <- renderUI({
+    withMathJax(tagList(
+      #h4("Hypothesis"),
+      
+      #HTML("<p>H", sub("0"), ":\\( \\miu_1 = \\miu_2 \\)"),
+      p("Hello!")))
+  })  
   
   output$out3 <- renderText({ paste("You selected:", input$drop3) })
 }
