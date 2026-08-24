@@ -118,7 +118,7 @@ ui <- fluidPage(
       # The id connects this panel to the conditional panels above
       tabsetPanel(
         id = "selected_tab",
-        tabPanel("Module 1 Tests", value = "tab1", textOutput("out1")),
+        tabPanel("Chi-Squared Tests", value = "tab1", textOutput("out1")),
         tabPanel("Module 2 Tests", value = "tab2", verbatimTextOutput("out2")),
         tabPanel("Resampling Tests", value = "tab3", textOutput("out3"))
       )
@@ -180,6 +180,7 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+
 
 
 
