@@ -600,15 +600,22 @@ server <- function(input, output) {
   
   
   # -------------------------------------------------------
-  # QUESTION 1 TEST PLACEHOLDERS
+  # QUESTION 1 - CHI-SQUARE INDEPENDENCE TEST
   # -------------------------------------------------------
-  # Actual chi-square tests will be implemented in
-  # separate commits.
-  
   output$q1_chi_independence <- renderPrint({
-    "Chi-square independence test will be implemented in a separate commit."
+    
+    chisq.test(
+      q1_ind_table(),
+      correct = FALSE
+    )
   })
   
+  
+  # -------------------------------------------------------
+  # QUESTION 1 TEST PLACEHOLDERS
+  # -------------------------------------------------------
+  # Remaining chi-square tests will be implemented in
+  # separate commits.
   
   output$q1_chi_homogeneity <- renderPrint({
     "Chi-square homogeneity test will be implemented in a separate commit."
