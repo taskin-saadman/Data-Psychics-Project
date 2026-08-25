@@ -262,6 +262,19 @@ ui <- fluidPage(
     # =====================================================
     mainPanel(
       
+      # DEFINE RESEARCH QUESTION
+      h4("Research Question"),
+      p("The question we would like to answer is whether ", 
+        "there may exist significant challenges that students ", 
+        "face in their studies. This includes employment, travel, ", 
+        "or gaps in study skills. Through performing relevant ", 
+        "statistical tests on selected variables, relationships ", 
+        "between these possible challenges and a student's grades ", 
+        "may surface. By identifying these challenges, the ",
+        "university may be able to provide earlier, more efficient ", 
+        "and targeted assistance to students in need."), 
+    
+
       # ---------------------------------------------------
       # TOP-LEVEL TABS
       # ---------------------------------------------------
