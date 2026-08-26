@@ -546,7 +546,7 @@ server <- function(input, output) {
               "We will conduct a Student's t-test,
               as the p-value for Levene's test = {p_equal_var}
               is more than the significance level of 0.05
-              (homoscedasticity)."
+              (homoscedasticity). Sienna says hi"
             ),
             
             df |>
