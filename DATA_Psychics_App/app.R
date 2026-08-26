@@ -3,16 +3,11 @@ library(tidyverse)
 library(rstatix)
 library(glue)
 
-#setwd("C:/Users/user/Downloads")
-#getwd()
-
-# Read csv
 df <- read_csv(
   "DATA2X02_data_cleaned.csv",
   show_col_types = FALSE
 )
 
-# Convert to factor
 df <- df %>% mutate(
   across(
     c(
@@ -28,7 +23,6 @@ df <- df %>% mutate(
   )
 )
 
-# Convert to numeric for ordinal factors
 df <- df %>% mutate(
   across(
     c("grade_1X01", "grade_2X02"),
@@ -41,7 +35,6 @@ df <- df %>% mutate(
   )
 )
 
-# Define numeric choices
 numeric_choices <- c(
   "travel_to_campus_min",
   "rent_dollars",
@@ -50,7 +43,6 @@ numeric_choices <- c(
   "water_l"
 )
 
-# Define categorical nominal choices
 nominal_choices <- c(
   "intl_dom_type",
   "type_2X02",
@@ -61,16 +53,10 @@ nominal_choices <- c(
   "multitask_y_n"
 )
 
-# Define categorical ordinal choices
 ordinal_choices <- c(
   "grade_1X01",
   "grade_2X02"
 )
-
-
-# =========================================================
-# UI
-# =========================================================
 
 ui <- fluidPage(
   
@@ -80,9 +66,6 @@ ui <- fluidPage(
     
     sidebarPanel(
       
-      # ===================================================
-      # QUESTION 1 SIDEBAR
-      # ===================================================
       conditionalPanel(
         condition = "input.selected_tab == 'question1'",
         
@@ -160,40 +143,11 @@ ui <- fluidPage(
         )
       ),
       
-      
-      # ===================================================
-      # QUESTION 2 SIDEBAR
-      # ===================================================
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
         
-        # ---------------------------------------------------
-        # Module 1 sidebar options
-        # ---------------------------------------------------
         conditionalPanel(
-          condition = "input.module_tab == 'module1'",
-          
-          selectInput(
-            inputId = "drop1_xvar",
-            label = "Module 1 Test Options:",
-            choices = nominal_choices,
-            selected = "intl_dom_type"
-          ),
-          
-          selectInput(
-            inputId = "drop1_yvar",
-            label = "Module 1 Test Options:",
-            choices = numeric_choices,
-            selected = "rent_dollars"
-          )
-        ),
-        
-        
-        # ---------------------------------------------------
-        # Module 2 sidebar options
-        # ---------------------------------------------------
-        conditionalPanel(
-          condition = "input.module_tab == 'module2'",
+          condition = "input.module_tab == 'welch_t_test'",
           
           selectInput(
             inputId = "drop2_xvar",
@@ -229,40 +183,66 @@ ui <- fluidPage(
               selected = "grade_1X01"
             )
           )
-        ),
+        )
+      ),
+      
+      conditionalPanel(
+        condition = "input.selected_tab == 'question3'",
         
-        
-        # ---------------------------------------------------
-        # Resampling Tests sidebar options
-        # ---------------------------------------------------
         conditionalPanel(
-          condition = "input.module_tab == 'resampling'",
+          condition = "input.q3_tab == 'q3_perm_employment'",
           
-          selectInput(
-            inputId = "drop3_xvar",
-            label = "Module 3 Test Options:",
-            choices = nominal_choices,
-            selected = "intl_dom_type"
+          h4("Monte Carlo Permutation Options"),
+          p("Permutation test for the difference in mean weekly working hours between DATA2002 and DATA2902 students."),
+          
+          numericInput(
+            inputId = "q1_B", 
+            label = "Permutations:", 
+            value = 1000, 
+            min = 1, 
+            max = 100000
           ),
           
+          actionButton(
+            inputId = "run_q1_perm", 
+            label = "Run Permutation Test", 
+            class = "btn-primary"
+          )
+        ),
+        
+        conditionalPanel(
+          condition = "input.q3_tab == 'q3_perm_multitask'",
+          
+          h4("Monte Carlo Permutation Options"),
+          
           selectInput(
-            inputId = "drop3_yvar",
-            label = "Module 3 Test Options:",
-            choices = numeric_choices,
-            selected = "rent_dollars"
+            inputId = "perm_group",
+            label = "Compare Multitasking By:",
+            choices = c(
+              "Employment Status (working/not working)" = "employment_y_n",
+              "Rent Status (rent/no rent)" = "rent_y_n"
+            )
+          ),
+          
+          numericInput(
+            inputId = "B", 
+            label = "Permutations:", 
+            value = 1000, 
+            min = 1, 
+            max = 100000
+          ),
+          
+          actionButton(
+            inputId = "run_perm", 
+            label = "Run Permutation Test", 
+            class = "btn-primary"
           )
         )
-        
       )
     ),
     
-    
-    # =====================================================
-    # MAIN PANEL
-    # =====================================================
     mainPanel(
       
-      # DEFINE RESEARCH QUESTION
       h4("Research Question"),
       p("The question we would like to answer is whether ", 
         "there may exist significant challenges that students ", 
@@ -273,18 +253,10 @@ ui <- fluidPage(
         "may surface. By identifying these challenges, the ",
         "university may be able to provide earlier, more efficient ", 
         "and targeted assistance to students in need."), 
-    
-
-      # ---------------------------------------------------
-      # TOP-LEVEL TABS
-      # ---------------------------------------------------
+      
       tabsetPanel(
         id = "selected_tab",
         
-        
-        # =================================================
-        # QUESTION 1
-        # =================================================
         tabPanel(
           title = "QUESTION 1",
           value = "question1",
@@ -296,9 +268,6 @@ ui <- fluidPage(
           tabsetPanel(
             id = "q1_tab",
             
-            # ---------------------------------------------
-            # Introduction
-            # ---------------------------------------------
             tabPanel(
               title = "Introduction",
               value = "introduction",
@@ -348,10 +317,6 @@ ui <- fluidPage(
               )
             ),
             
-            
-            # ---------------------------------------------
-            # Chi-square independence
-            # ---------------------------------------------
             tabPanel(
               title = "Chi-square Independence",
               value = "independence",
@@ -370,10 +335,6 @@ ui <- fluidPage(
               verbatimTextOutput("q1_chi_independence")
             ),
             
-            
-            # ---------------------------------------------
-            # Chi-square homogeneity
-            # ---------------------------------------------
             tabPanel(
               title = "Chi-square Homogeneity",
               value = "homogeneity",
@@ -388,10 +349,6 @@ ui <- fluidPage(
               verbatimTextOutput("q1_chi_homogeneity")
             ),
             
-            
-            # ---------------------------------------------
-            # CMH chi-square
-            # ---------------------------------------------
             tabPanel(
               title = "CMH Chi-square",
               value = "cmh",
@@ -409,68 +366,60 @@ ui <- fluidPage(
           )
         ),
         
-        
-        # =================================================
-        # QUESTION 2
-        # =================================================
         tabPanel(
           title = "QUESTION 2",
           value = "question2",
           
           h3("Question 2"),
           
-          # ------------------------------------------------
-          # Existing module tabs are nested inside Q2
-          # ------------------------------------------------
           tabsetPanel(
             id = "module_tab",
             
-            # ----------------------------------------------
-            # Module 1
-            # ----------------------------------------------
             tabPanel(
-              title = "Module 1 Tests",
-              value = "module1",
-              
-              textOutput("out1")
-            ),
-            
-            
-            # ----------------------------------------------
-            # Module 2
-            # ----------------------------------------------
-            tabPanel(
-              title = "Module 2 Tests",
-              value = "module2",
+              title = "Welch- Two Sample t-test",
+              value = "welch_t_test",
               
               verbatimTextOutput("out2")
-            ),
-            
-            
-            # ----------------------------------------------
-            # Resampling Tests
-            # ----------------------------------------------
-            tabPanel(
-              title = "Resampling Tests",
-              value = "resampling",
-              
-              textOutput("out3")
             )
           )
         ),
         
-        
-        # =================================================
-        # QUESTION 3
-        # =================================================
         tabPanel(
           title = "QUESTION 3",
           value = "question3",
           
-          h3("Question 3"),
+          h3("Question 3 (Monte Carlo Permutation Tests)"),
           
-          p(
-            "Question 3 analysis will be added in a later commit."
+          tabsetPanel(
+            id = "q3_tab",
+            
+            tabPanel(
+              title = "Employment Hours",
+              value = "q3_perm_employment",
+              
+              h4("Permutation Test: Employment Hours Difference"),
+              p(
+                "We use a Monte Carlo permutation test to evaluate if the difference in ",
+                "mean weekly employment hours between DATA2002 and DATA2902 students is statistically significant."
+              ),
+              
+              plotOutput("q1_perm_plot"),
+              verbatimTextOutput("q1_perm_summary")
+            ),
+            
+            tabPanel(
+              title = "Multitasking",
+              value = "q3_perm_multitask",
+              
+              h4("Permutation Test: Multitasking Proportion Shifts"),
+              p(
+                "We use a Monte Carlo permutation test to determine if the proportion of ",
+                "students who multitask shifts significantly based on employment or rent status."
+              ),
+              
+              plotOutput("perm_plot"),
+              verbatimTextOutput("perm_summary")
+            )
           )
         )
       )
@@ -478,27 +427,8 @@ ui <- fluidPage(
   )
 )
 
-
-# =========================================================
-# SERVER
-# =========================================================
-
 server <- function(input, output) {
   
-  # -------------------------------------------------------
-  # MODULE 1
-  # -------------------------------------------------------
-  output$out1 <- renderText({
-    paste(
-      "You selected:",
-      input$drop1_xvar
-    )
-  })
-  
-  
-  # -------------------------------------------------------
-  # MODULE 2
-  # -------------------------------------------------------
   output$out2 <- renderPrint({
     
     xvar <- input$drop2_xvar
@@ -507,12 +437,10 @@ server <- function(input, output) {
       
       yvar <- input$drop2_yvar_num
       
-      # Build formula
       f <- as.formula(
         paste(yvar, "~", xvar)
       )
       
-      # Conduct Levene's test
       p_equal_var <- levene_test(
         f,
         data = df
@@ -546,7 +474,7 @@ server <- function(input, output) {
               "We will conduct a Student's t-test,
               as the p-value for Levene's test = {p_equal_var}
               is more than the significance level of 0.05
-              (homoscedasticity). Sienna says hi"
+              (homoscedasticity)."
             ),
             
             df |>
@@ -563,7 +491,6 @@ server <- function(input, output) {
       
       yvar <- input$drop2_yvar_ord
       
-      # Build formula
       f <- as.formula(
         paste(yvar, "~", xvar)
       )
@@ -584,21 +511,138 @@ server <- function(input, output) {
     }
   })
   
-  
-  # -------------------------------------------------------
-  # RESAMPLING TESTS
-  # -------------------------------------------------------
-  output$out3 <- renderText({
-    paste(
-      "You selected:",
-      input$drop3_xvar
+  perm_res <- eventReactive(input$run_perm, {
+    req(df)
+    
+    validate(
+      need(input$B >= 1 && input$B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
     )
+    
+    B <- input$B
+    group_var <- input$perm_group
+    
+    dat <- df %>% filter(!is.na(multitask_y_n), !is.na(!!sym(group_var)))
+    g_levels <- levels(factor(dat[[group_var]]))
+    
+    if(length(g_levels) < 2) return(NULL) 
+    
+    g1 <- g_levels[1]
+    g2 <- g_levels[2]
+    success_level <- if("Yes" %in% levels(dat$multitask_y_n)) "Yes" else levels(dat$multitask_y_n)[1]
+    
+    obs_p1 <- mean(dat$multitask_y_n[dat[[group_var]] == g1] == success_level, na.rm = TRUE)
+    obs_p2 <- mean(dat$multitask_y_n[dat[[group_var]] == g2] == success_level, na.rm = TRUE)
+    obs_diff <- obs_p1 - obs_p2
+    
+    diffs <- replicate(B, {
+      shuffled_group <- sample(dat[[group_var]])
+      p1 <- mean(dat$multitask_y_n[shuffled_group == g1] == success_level, na.rm = TRUE)
+      p2 <- mean(dat$multitask_y_n[shuffled_group == g2] == success_level, na.rm = TRUE)
+      p1 - p2
+    })
+    
+    pval <- mean(abs(diffs) >= abs(obs_diff))
+    
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, success = success_level, group = group_var, g1 = g1, g2 = g2)
+  }, ignoreNULL = FALSE)
+  
+  output$perm_summary <- renderPrint({
+    req(perm_res())
+    res <- perm_res()
+    
+    cat("Monte Carlo Permutation Test for difference in proportions (Level: '", res$success, "')\n", sep="")
+    cat("Grouping Variable: ", res$group, "\n")
+    cat("Test Statistic (Observed Difference): Proportion(", res$g1, ") - Proportion(", res$g2, ")\n\n", sep="")
+    
+    cat("Observed Difference: ", round(res$obs_diff, 4), "\n")
+    cat("Permutation P-value: ", format.pval(res$pval, eps = 1/input$B), "\n\n")
+    
+    if(res$pval < 0.05) {
+      cat("Conclusion: At alpha = 0.05, we reject the null hypothesis. The proportion significantly shifts based on ", res$group, ".\n", sep="")
+    } else {
+      cat("Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence that the proportion significantly shifts based on ", res$group, ".\n", sep="")
+    }
   })
   
+  output$perm_plot <- renderPlot({
+    req(perm_res())
+    res <- perm_res()
+    df_plot <- data.frame(val = res$dist)
+    
+    ggplot(df_plot, aes(x = val)) +
+      geom_histogram(bins = 30, fill = "#4A90E2", color = "white") +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      labs(
+        title = paste("Null Distribution of Difference in Proportions\n(", res$g1, " vs ", res$g2, ")", sep=""), 
+        x = "Simulated Difference Under Null Hypothesis", 
+        y = "Frequency"
+      ) +
+      theme_minimal()
+  })
   
-  # -------------------------------------------------------
-  # QUESTION 1 - INDEPENDENCE CONTINGENCY TABLE
-  # -------------------------------------------------------
+  q1_perm_res <- eventReactive(input$run_q1_perm, {
+    req(df)
+    
+    validate(
+      need(input$q1_B >= 1 && input$q1_B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+    )
+    
+    B <- input$q1_B
+    
+    dat <- df %>% filter(!is.na(employment_hours), !is.na(type_2X02))
+    
+    obs_mean_2002 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2002"], na.rm = TRUE)
+    obs_mean_2902 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2902"], na.rm = TRUE)
+    obs_diff <- obs_mean_2002 - obs_mean_2902
+    
+    diffs <- replicate(B, {
+      shuffled_type <- sample(dat$type_2X02)
+      mean_2002 <- mean(dat$employment_hours[shuffled_type == "DATA2002"], na.rm = TRUE)
+      mean_2902 <- mean(dat$employment_hours[shuffled_type == "DATA2902"], na.rm = TRUE)
+      mean_2002 - mean_2902
+    })
+    
+    pval <- mean(abs(diffs) >= abs(obs_diff))
+    
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
+  }, ignoreNULL = FALSE)
+  
+  output$q1_perm_summary <- renderPrint({
+    req(q1_perm_res())
+    res <- q1_perm_res()
+    
+    cat("Monte Carlo Permutation Test for difference in mean weekly employment hours\n")
+    cat("Test Statistic: Mean(", res$g1, ") - Mean(", res$g2, ")\n\n", sep="")
+    
+    cat("Observed Difference: ", round(res$obs_diff, 4), " hours\n")
+    cat("Permutation P-value: ", format.pval(res$pval, eps = 1/input$q1_B), "\n\n")
+    
+    if(res$pval < 0.05) {
+      cat("Conclusion: At alpha = 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")
+    } else {
+      cat("Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")
+    }
+  })
+  
+  output$q1_perm_plot <- renderPlot({
+    req(q1_perm_res())
+    res <- q1_perm_res()
+    
+    df_plot <- data.frame(val = res$dist)
+    
+    ggplot(df_plot, aes(x = val)) +
+      geom_histogram(bins = 30, fill = "#F5A623", color = "white") +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      labs(
+        title = "Null Distribution of Difference in Mean Employment Hours\n(DATA2002 - DATA2902)",
+        x = "Simulated Difference Under Null Hypothesis",
+        y = "Frequency"
+      ) +
+      theme_minimal()
+  })
+  
   q1_ind_table <- reactive({
     
     req(input$q1_ind_x, input$q1_ind_y)
@@ -617,10 +661,6 @@ server <- function(input, output) {
     )
   })
   
-  
-  # -------------------------------------------------------
-  # QUESTION 1 - CHI-SQUARE INDEPENDENCE TEST
-  # -------------------------------------------------------
   q1_ind_test <- reactive({
     
     chisq.test(
@@ -628,7 +668,6 @@ server <- function(input, output) {
       correct = FALSE
     )
   })
-  
   
   output$q1_ind_table <- renderTable({
     
@@ -658,32 +697,18 @@ server <- function(input, output) {
     
   }, rownames = TRUE)
   
-  
   output$q1_chi_independence <- renderPrint({
     q1_ind_test()
   })
-  
-  
-  # -------------------------------------------------------
-  # QUESTION 1 TEST PLACEHOLDERS
-  # -------------------------------------------------------
-  # Remaining chi-square tests will be implemented in
-  # separate commits.
   
   output$q1_chi_homogeneity <- renderPrint({
     "Chi-square homogeneity test will be implemented in a separate commit."
   })
   
-  
   output$q1_cmh <- renderPrint({
     "Cochran-Mantel-Haenszel test will be implemented in a separate commit."
   })
 }
-
-
-# =========================================================
-# RUN APP
-# =========================================================
 
 shinyApp(
   ui = ui,
