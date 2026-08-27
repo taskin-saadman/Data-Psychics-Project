@@ -147,7 +147,7 @@ ui <- fluidPage(
         condition = "input.selected_tab == 'question2'",
         
         conditionalPanel(
-          condition = "input.module_tab == 'welch_t_test'",
+          condition = "input.q2_tab == 'two_sample_q2'",
           
           selectInput(
             inputId = "drop2_xvar",
@@ -242,21 +242,35 @@ ui <- fluidPage(
     ),
     
     mainPanel(
-      
-      h4("Research Question"),
-      p("The question we would like to answer is whether ", 
-        "there may exist significant challenges that students ", 
-        "face in their studies. This includes employment, travel, ", 
-        "or gaps in study skills. Through performing relevant ", 
-        "statistical tests on selected variables, relationships ", 
-        "between these possible challenges and a student's grades ", 
-        "may surface. By identifying these challenges, the ",
-        "university may be able to provide earlier, more efficient ", 
-        "and targeted assistance to students in need."), 
-      
       tabsetPanel(
         id = "selected_tab",
         
+        tabPanel(
+          title = "INTRODUCTION",
+          value = "intro",
+          
+          h2("Research Motivation"),
+          p("Graphs go in here, possibly interactive as well"),
+          p("The question we would like to answer is whether ", 
+            "there may exist significant challenges that students ", 
+            "face in their studies. This includes employment, travel, ", 
+            "or gaps in study skills. Through performing relevant ", 
+            "statistical tests on selected variables, relationships ", 
+            "between these possible challenges and a student's grades ", 
+            "may surface. By identifying these challenges, the ",
+            "university may be able to provide earlier, more efficient ", 
+            "and targeted assistance to students in need."), 
+          
+          h2("Data Description"),
+          p("Basic description of data, justification on whether it's a random sample...etc."),
+          
+          h2("Limitations and Biases"),
+          
+          h2("Data Processing"),
+          p("Detailing our data cleaning process"),
+          
+        ),
+
         tabPanel(
           title = "QUESTION 1",
           value = "question1",
@@ -370,20 +384,32 @@ ui <- fluidPage(
           title = "QUESTION 2",
           value = "question2",
           
-          h3("Question 2"),
+          h3("Two Sample Tests for Student Academics & Lifestyle Differences"),
           
+          #first tabset
           tabsetPanel(
-            id = "module_tab",
+            id = "q2_tab",
             
             tabPanel(
-              title = "Welch- Two Sample t-test",
-              value = "welch_t_test",
+              title = "Introduction",
+              value = "intro_q2",
+              
+              h4("Research Question"),
+              p("This is where I'd put my research question... if I had one"),
+              
+              h4("Assumptions"),
+              p("And this is where I elaborate on the assumptions for the three tests we did!")
+            ),
+            
+            tabPanel(
+              title = "Two Sample test",
+              value = "two_sample_q2",
               
               verbatimTextOutput("out2")
             )
           )
         ),
-        
+          
         tabPanel(
           title = "QUESTION 3",
           value = "question3",
@@ -421,6 +447,21 @@ ui <- fluidPage(
               verbatimTextOutput("perm_summary")
             )
           )
+        ),
+        
+        tabPanel(
+          title = "APPENDIX",
+          value = "appendix",
+          
+          h4("AI Usage Statement"),
+          p("No/ALL (like every single one) artificial intelligence tools were used in the completion of this project."),
+          
+          h4("ISI Professional Ethics Statement"),
+          p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."), 
+          p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
+          
+          h4("References"),
+          p("Insert any references in APA 7th format that was used for this report, including coding references")
         )
       )
     )
