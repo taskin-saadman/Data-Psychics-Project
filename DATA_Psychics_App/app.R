@@ -267,8 +267,20 @@ ui <- fluidPage(
           h2("Limitations and Biases"),
           
           h2("Data Processing"),
-          p("Detailing our data cleaning process"),
+          p("The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement. 
+          All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors to preserve their ordinal structure. 
+          A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."),
+          p("The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency and reducing storage requirements.
+            The Boolean rent and multitasking variables were reprocessed to ensure consistency and prevent misaligned records: rent values above zero were coded as yes, while zero values were coded as no. 
+            For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."),
+            
+          p("Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus, 
+            spending more than 1.5 * 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work, 
+            with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations 
+            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges), or exactly zero hours a day."),
           
+          p("Lastly, a new grouping column was created to classify assessment workflow patterns as as either consistent (gradually and immediately) or inconsistent (crammed and other), 
+            primarily for two-sample mean comparison analyses.")
         ),
 
         tabPanel(
