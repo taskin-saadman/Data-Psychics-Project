@@ -275,9 +275,9 @@ ui <- fluidPage(
             For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."),
             
           p("Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus, 
-            spending more than 1.5 * 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work, 
+            spending more than 1.5 × 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work, 
             with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations 
-            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges), or exactly zero hours a day."),
+            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (citation needed)), or exactly zero hours a day."),
           
           p("Lastly, a new grouping column was created to classify assessment workflow patterns as as either consistent (gradually and immediately) or inconsistent (crammed and other), 
             primarily for two-sample mean comparison analyses.")
