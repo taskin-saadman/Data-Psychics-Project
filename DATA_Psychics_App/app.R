@@ -60,6 +60,14 @@ ordinal_choices <- c(
 
 ui <- fluidPage(
   
+  tags$head(
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      href = "style.css"
+    )
+  ),
+  
   titlePanel("DATA2902 Psychics"),
   
   sidebarLayout(
