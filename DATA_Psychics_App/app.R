@@ -392,7 +392,21 @@ ui <- fluidPage(
                 "status is homogeneous across DATA2002 and DATA2902."
               ),
               
-              verbatimTextOutput("q1_chi_homogeneity")
+              h4("Observed Counts"),
+              
+              tableOutput("q1_hom_table"),
+              
+              h4("Employment Proportions by Course"),
+              
+              tableOutput("q1_hom_proportions"),
+              
+              h4("Test Result"),
+              
+              verbatimTextOutput("q1_chi_homogeneity"),
+              
+              h4("Interpretation"),
+              
+              verbatimTextOutput("q1_hom_interpretation")
             ),
             
             tabPanel(
@@ -884,9 +898,104 @@ server <- function(input, output) {
     }
   })
   
-  output$q1_chi_homogeneity <- renderPrint({
-    "Chi-square homogeneity test will be implemented in a separate commit."
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - CHI-SQUARE HOMOGENEITY
+  # -------------------------------------------------------
+  q1_hom_table <- reactive({
+    
+    table(
+      df$type_2X02,
+      df$employment_y_n,
+      dnn = c("Course enrolment", "Employment status")
+    )
   })
+  
+  
+  q1_hom_test <- reactive({
+    
+    chisq.test(
+      q1_hom_table(),
+      correct = FALSE
+    )
+  })
+  
+  
+  output$q1_hom_table <- renderTable({
+    q1_hom_table()
+  }, rownames = TRUE)
+  
+  
+  output$q1_hom_proportions <- renderTable({
+    
+    round(
+      prop.table(
+        q1_hom_table(),
+        margin = 1
+      ),
+      3
+    )
+    
+  }, rownames = TRUE)
+  
+  
+  output$q1_chi_homogeneity <- renderPrint({
+    q1_hom_test()
+  })
+  
+  
+  output$q1_hom_interpretation <- renderPrint({
+    
+    test <- q1_hom_test()
+    p_value <- test$p.value
+    
+    cat(
+      "Null hypothesis: The distribution of paid employment status ",
+      "is the same for DATA2002 and DATA2902 students.\n\n"
+    )
+    
+    cat(
+      "Alternative hypothesis: The distribution of paid employment ",
+      "status differs between DATA2002 and DATA2902 students.\n\n"
+    )
+    
+    cat(
+      "Chi-square statistic:",
+      round(unname(test$statistic), 3),
+      "\n"
+    )
+    
+    cat(
+      "Degrees of freedom:",
+      unname(test$parameter),
+      "\n"
+    )
+    
+    cat(
+      "P-value:",
+      format.pval(p_value, digits = 4, eps = 0.0001),
+      "\n\n"
+    )
+    
+    if (p_value < 0.05) {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
+        "There is statistically significant evidence that the distribution ",
+        "of paid employment status is not homogeneous across DATA2002 ",
+        "and DATA2902 students."
+      )
+      
+    } else {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
+        "There is insufficient evidence that the distribution of paid ",
+        "employment status differs between DATA2002 and DATA2902 students."
+      )
+    }
+  })
+  
   
   output$q1_cmh <- renderPrint({
     "Cochran-Mantel-Haenszel test will be implemented in a separate commit."
