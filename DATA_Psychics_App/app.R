@@ -196,16 +196,16 @@ ui <- fluidPage(
           p("Permutation test for the difference in mean weekly working hours between DATA2002 and DATA2902 students."),
           
           numericInput(
-            inputId = "q1_B", 
-            label = "Permutations:", 
-            value = 1000, 
-            min = 1, 
+            inputId = "q1_B",
+            label = "Permutations:",
+            value = 1000,
+            min = 1,
             max = 100000
           ),
           
           actionButton(
-            inputId = "run_q1_perm", 
-            label = "Run Permutation Test", 
+            inputId = "run_q1_perm",
+            label = "Run Permutation Test",
             class = "btn-primary"
           )
         ),
@@ -225,16 +225,16 @@ ui <- fluidPage(
           ),
           
           numericInput(
-            inputId = "B", 
-            label = "Permutations:", 
-            value = 1000, 
-            min = 1, 
+            inputId = "B",
+            label = "Permutations:",
+            value = 1000,
+            min = 1,
             max = 100000
           ),
           
           actionButton(
-            inputId = "run_perm", 
-            label = "Run Permutation Test", 
+            inputId = "run_perm",
+            label = "Run Permutation Test",
             class = "btn-primary"
           )
         )
@@ -251,15 +251,17 @@ ui <- fluidPage(
           
           h2("Research Motivation"),
           p("Graphs go in here, possibly interactive as well"),
-          p("The question we would like to answer is whether ", 
-            "there may exist significant challenges that students ", 
-            "face in their studies. This includes employment, travel, ", 
-            "or gaps in study skills. Through performing relevant ", 
-            "statistical tests on selected variables, relationships ", 
-            "between these possible challenges and a student's grades ", 
+          p(
+            "The question we would like to answer is whether ",
+            "there may exist significant challenges that students ",
+            "face in their studies. This includes employment, travel, ",
+            "or gaps in study skills. Through performing relevant ",
+            "statistical tests on selected variables, relationships ",
+            "between these possible challenges and a student's grades ",
             "may surface. By identifying these challenges, the ",
-            "university may be able to provide earlier, more efficient ", 
-            "and targeted assistance to students in need."), 
+            "university may be able to provide earlier, more efficient ",
+            "and targeted assistance to students in need."
+          ),
           
           h2("Data Description"),
           p("Basic description of data, justification on whether it's a random sample...etc."),
@@ -267,22 +269,30 @@ ui <- fluidPage(
           h2("Limitations and Biases"),
           
           h2("Data Processing"),
-          p("The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement. 
+          p(
+            "The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement. 
           All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors to preserve their ordinal structure. 
-          A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."),
-          p("The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency and reducing storage requirements.
+          A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."
+          ),
+          p(
+            "The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency and reducing storage requirements.
             The Boolean rent and multitasking variables were reprocessed to ensure consistency and prevent misaligned records: rent values above zero were coded as yes, while zero values were coded as no. 
-            For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."),
-            
-          p("Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus, 
+            For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."
+          ),
+          
+          p(
+            "Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus, 
             spending more than 1.5 × 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work, 
             with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations 
-            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (citation needed)), or exactly zero hours a day."),
+            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (citation needed)), or exactly zero hours a day."
+          ),
           
-          p("Lastly, a new grouping column was created to classify assessment workflow patterns as as either consistent (gradually and immediately) or inconsistent (crammed and other), 
-            primarily for two-sample mean comparison analyses.")
+          p(
+            "Lastly, a new grouping column was created to classify assessment workflow patterns as as either consistent (gradually and immediately) or inconsistent (crammed and other), 
+            primarily for two-sample mean comparison analyses."
+          )
         ),
-
+        
         tabPanel(
           title = "QUESTION 1",
           value = "question1",
@@ -358,7 +368,17 @@ ui <- fluidPage(
               
               tableOutput("q1_ind_table"),
               
-              verbatimTextOutput("q1_chi_independence")
+              h4("Test Result"),
+              
+              verbatimTextOutput("q1_chi_independence"),
+              
+              h4("Assumption Check"),
+              
+              verbatimTextOutput("q1_ind_assumptions"),
+              
+              h4("Interpretation"),
+              
+              verbatimTextOutput("q1_ind_interpretation")
             ),
             
             tabPanel(
@@ -421,7 +441,7 @@ ui <- fluidPage(
             )
           )
         ),
-          
+        
         tabPanel(
           title = "QUESTION 3",
           value = "question3",
@@ -469,7 +489,7 @@ ui <- fluidPage(
           p("No/ALL (like every single one) artificial intelligence tools were used in the completion of this project."),
           
           h4("ISI Professional Ethics Statement"),
-          p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."), 
+          p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
           p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
           
           h4("References"),
@@ -577,7 +597,7 @@ server <- function(input, output) {
     dat <- df %>% filter(!is.na(multitask_y_n), !is.na(!!sym(group_var)))
     g_levels <- levels(factor(dat[[group_var]]))
     
-    if(length(g_levels) < 2) return(NULL) 
+    if(length(g_levels) < 2) return(NULL)
     
     g1 <- g_levels[1]
     g2 <- g_levels[2]
@@ -627,8 +647,8 @@ server <- function(input, output) {
       geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       labs(
-        title = paste("Null Distribution of Difference in Proportions\n(", res$g1, " vs ", res$g2, ")", sep=""), 
-        x = "Simulated Difference Under Null Hypothesis", 
+        title = paste("Null Distribution of Difference in Proportions\n(", res$g1, " vs ", res$g2, ")", sep=""),
+        x = "Simulated Difference Under Null Hypothesis",
         y = "Frequency"
       ) +
       theme_minimal()
@@ -752,6 +772,116 @@ server <- function(input, output) {
   
   output$q1_chi_independence <- renderPrint({
     q1_ind_test()
+  })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - CHI-SQUARE ASSUMPTION CHECK
+  # -------------------------------------------------------
+  output$q1_ind_assumptions <- renderPrint({
+    
+    expected <- q1_ind_test()$expected
+    
+    total_cells <- length(expected)
+    cells_below_5 <- sum(expected < 5)
+    cells_below_1 <- sum(expected < 1)
+    percent_below_5 <- (cells_below_5 / total_cells) * 100
+    
+    cat("Expected Cell Count Check\n\n")
+    
+    cat(
+      "Cells with expected count below 5:",
+      cells_below_5,
+      "out of",
+      total_cells,
+      paste0("(", round(percent_below_5, 1), "%)"),
+      "\n"
+    )
+    
+    cat(
+      "Cells with expected count below 1:",
+      cells_below_1,
+      "\n\n"
+    )
+    
+    if (cells_below_1 == 0 && percent_below_5 <= 20) {
+      
+      cat(
+        "Conclusion: The expected-count condition for the ",
+        "chi-square approximation is satisfied."
+      )
+      
+    } else {
+      
+      cat(
+        "Conclusion: The expected-count condition may not be satisfied. ",
+        "The Pearson chi-square approximation should therefore be ",
+        "interpreted with caution."
+      )
+    }
+  })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - CHI-SQUARE INTERPRETATION
+  # -------------------------------------------------------
+  output$q1_ind_interpretation <- renderPrint({
+    
+    test <- q1_ind_test()
+    
+    p_value <- test$p.value
+    
+    cat(
+      "Selected variables:",
+      input$q1_ind_x,
+      "and",
+      input$q1_ind_y,
+      "\n\n"
+    )
+    
+    cat(
+      "Chi-square statistic:",
+      round(unname(test$statistic), 3),
+      "\n"
+    )
+    
+    cat(
+      "Degrees of freedom:",
+      unname(test$parameter),
+      "\n"
+    )
+    
+    cat(
+      "P-value:",
+      format.pval(p_value, digits = 4, eps = 0.0001),
+      "\n\n"
+    )
+    
+    if (p_value < 0.05) {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
+        "There is statistically significant evidence of an association ",
+        "between ",
+        input$q1_ind_x,
+        " and ",
+        input$q1_ind_y,
+        ".",
+        sep = ""
+      )
+      
+    } else {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
+        "There is insufficient evidence of an association between ",
+        input$q1_ind_x,
+        " and ",
+        input$q1_ind_y,
+        ".",
+        sep = ""
+      )
+    }
   })
   
   output$q1_chi_homogeneity <- renderPrint({
