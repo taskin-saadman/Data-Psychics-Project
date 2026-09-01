@@ -36,26 +36,26 @@ df <- df %>% mutate(
 )
 
 numeric_choices <- c(
-  "travel_to_campus_min",
-  "rent_dollars",
-  "employment_hours",
-  "sleep_hours",
-  "water_l"
+  "Commute to Campus Time (mins)" = "travel_to_campus_min",
+  "Weekly Rent (dollars)" = "rent_dollars",
+  "Employment Hours (hours)" = "employment_hours",
+  "Sleep Duration (hours)" = "sleep_hours",
+  "Water Consumption (litres)" = "water_l"
 )
 
 nominal_choices <- c(
-  "intl_dom_type",
-  "type_2X02",
-  "assessment_workflow",
-  "workflow_grouped",
-  "rent_y_n",
-  "employment_y_n",
-  "multitask_y_n"
+  "International/Domestic Student Status" = "intl_dom_type",
+  "DATA2X02 Enrollment" = "type_2X02",
+  "Assessment Workflow" = "assessment_workflow",
+  "Grouped Workflow" = "workflow_grouped",
+  "Rent y/n" = "rent_y_n",
+  "Employment y/n" = "employment_y_n",
+  "Multitasking y/n" = "multitask_y_n"
 )
 
 ordinal_choices <- c(
-  "grade_1X01",
-  "grade_2X02"
+  "DATA1X01 Grade" = "grade_1X01",
+  "Aspirational DATA2X02 Grade" = "grade_2X02"
 )
 
 
@@ -310,11 +310,14 @@ ui <- fluidPage(
         conditionalPanel(
           condition = "input.q2_tab == 'two_sample_q2'",
 
+          h4("Two Sample Mean Test Options"),
+          p("Please choose one grouping variable and one numerical/ordinal variable."),
+          
           selectInput(
             inputId = "drop2_xvar",
             label = "Grouping Variables:",
             choices = nominal_choices[-3],
-            selected = "intl_dom_type"
+            #selected = "intl_dom_type"
           ),
 
           radioButtons(
@@ -330,7 +333,7 @@ ui <- fluidPage(
               inputId = "drop2_yvar_num",
               label = "Numerical Variables:",
               choices = numeric_choices,
-              selected = "travel_to_campus_min"
+              #selected = "travel_to_campus_min"
             )
           ),
 
@@ -341,7 +344,7 @@ ui <- fluidPage(
               inputId = "drop2_yvar_ord",
               label = "Ordinal Variables:",
               choices = ordinal_choices,
-              selected = "grade_1X01"
+              #selected = "grade_1X01"
             )
           )
         )
@@ -430,10 +433,30 @@ ui <- fluidPage(
           h2("Limitations and Biases"),
 
           h2("Data Processing"),
+          h3("Critique of Survey Questions"),
           p(
-            "The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement.
-          All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors to preserve their ordinal structure.
-          A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."
+            "Although the survey was explicitly framed around understanding student learning pathways, many of the questions feel irrelevant and do not translate into clear, targeted measures of those pathways 
+            by the unit to investigate student learning pathways or their key factors. This misalignment makes it difficult to robustly answer the unit's own research, even though students are encouraged to use 
+            the data freely for their own research questions."
+          ),
+          
+          p(
+            "The survey also contained inconsistencies in how key variables were recorded, particularly in the use of both numerical and Boolean formats for some items but not others.
+            For example, rent was assessed through a numerical amount and a separate yes/no question, whereas employment was captured solely through weekly hours. 
+            This uneven structure resulted in contradictory entries that needed to be fixed later on \"no\" rent paired with a positive rent value, or vice versa. 
+            Future surveys would benefit from standardising the response format to one numerical field with instructions to leave non‑applicable items at 0 would improve clarity and data reliability."
+          ),
+          
+          p(
+            "Additionally, students were allowed to select “Other” instead of the three provided workflow groups, but the survey did not include a space for them to describe what they actually do. 
+            This makes “Other” responses ambiguous and limits their usefulness. A simple free‑text field would have helped capture more accurate and meaningful distinctions among students’ assessment habits."
+          ),
+          
+          h3("Data Cleaning"),
+          p(
+          "The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement.
+           All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors to preserve their ordinal structure.
+            A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."
           ),
           p(
             "The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency and reducing storage requirements.
@@ -445,7 +468,8 @@ ui <- fluidPage(
             "Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus,
             spending more than 1.5 × 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work,
             with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations
-            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (citation needed)), or exactly zero hours a day."
+            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (Bollu et al., 2018), or exactly zero hours a day.
+            (note to self, need to find something for water consumption)"
           ),
 
           p(
@@ -628,10 +652,19 @@ ui <- fluidPage(
               value = "intro_q2",
 
               h4("Research Question"),
-              p("This is where I'd put my research question... if I had one"),
+              p("Is there a difference in the means of student's", textOutput("chosen_var", inline = TRUE), # Reactive text inline
+              "when divided by", textOutput("grouping_var", inline = TRUE),"?"),
 
               h4("Assumptions"),
-              p("And this is where I elaborate on the assumptions for the three tests we did!")
+              h5("Student Two Sample T-Test"),
+              p("insert assumptions"),
+              
+              h5("Welch Two Sample T-Test"),
+              p("insert assumptions"),
+              
+              h5("Wilcoxon Rank-Sum Test"),
+              p("insert assumptions")
+              
             ),
 
             tabPanel(
@@ -694,7 +727,10 @@ ui <- fluidPage(
           p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
 
           h4("References"),
-          p("Insert any references in APA 7th format that was used for this report, including coding references")
+          p("Insert any references in APA 7th format that was used for this report, including coding references"),
+        
+          p("Australian Government. (n.d.). Hours of work. Fair Work Ombudsman. Retrieved 2 September 2026, from https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work"),
+          p("Bollu, P. C., Manjamalai, S., Thakkar, M., & Sahota, P. (2018). Hypersomnia. Missouri Medicine, 115(1), 85–91.")
         )
       )
     )
@@ -702,7 +738,25 @@ ui <- fluidPage(
 )
 
 server <- function(input, output) {
-
+  # -------------------------------------------------------
+  # QUESTION 2 - INTRODUCTION
+  # -------------------------------------------------------  
+  output$grouping_var <- renderText({
+    input$drop2_xvar
+  })
+  
+  output$chosen_var <- renderText({
+    # Check what the radio button is set to
+    if (input$yvar_type == "Numerical") {
+      return(input$drop2_yvar_num)
+    } else {
+      return(input$drop2_yvar_ord)
+    }
+  })
+  
+  # -------------------------------------------------------
+  # QUESTION 2 - TWO SAMPLE T-TEST
+  # -------------------------------------------------------
   output$out2 <- renderPrint({
 
     xvar <- input$drop2_xvar
