@@ -533,6 +533,10 @@ ui <- fluidPage(
 
               verbatimTextOutput("q1_chi_independence"),
 
+              h4("Chi-square Distribution"),
+
+              plotOutput("q1_ind_chisq_plot"),
+
               h4("Assumption Check"),
 
               verbatimTextOutput("q1_ind_assumptions"),
@@ -565,6 +569,10 @@ ui <- fluidPage(
 
               verbatimTextOutput("q1_chi_homogeneity"),
 
+              h4("Chi-square Distribution"),
+
+              plotOutput("q1_hom_chisq_plot"),
+
               h4("Interpretation"),
 
               verbatimTextOutput("q1_hom_interpretation")
@@ -589,6 +597,10 @@ ui <- fluidPage(
               h4("Test Result"),
 
               verbatimTextOutput("q1_cmh"),
+
+              h4("Chi-square Distribution"),
+
+              plotOutput("q1_cmh_chisq_plot"),
 
               h4("Adjusted Interpretation"),
 
@@ -964,6 +976,92 @@ server <- function(input, output) {
   })
 
 
+  output$q1_ind_chisq_plot <- renderPlot({
+
+    test <- q1_ind_test()
+
+    df_chi <- unname(test$parameter)
+    stat <- unname(test$statistic)
+    p_value <- test$p.value
+
+    x_max <- max(
+      qchisq(0.999, df = df_chi),
+      stat * 1.15
+    )
+
+    x <- seq(
+      0.01,
+      x_max,
+      length.out = 1000
+    )
+
+    y <- dchisq(
+      x,
+      df = df_chi
+    )
+
+    plot(
+      x,
+      y,
+      type = "l",
+      lwd = 2,
+      xlab = expression(chi^2),
+      ylab = "Density",
+      main = paste(
+        "Chi-square Distribution (df =",
+        df_chi,
+        ")"
+      )
+    )
+
+    tail_x <- seq(
+      stat,
+      x_max,
+      length.out = 500
+    )
+
+    tail_y <- dchisq(
+      tail_x,
+      df = df_chi
+    )
+
+    polygon(
+      c(stat, tail_x, x_max),
+      c(0, tail_y, 0),
+      col = adjustcolor(
+        "red",
+        alpha.f = 0.25
+      ),
+      border = NA
+    )
+
+    lines(
+      x,
+      y,
+      lwd = 2
+    )
+
+    abline(
+      v = stat,
+      col = "red",
+      lty = 2,
+      lwd = 2
+    )
+
+    legend(
+      "topright",
+      legend = c(
+        paste0("Observed χ² = ", round(stat, 3)),
+        paste0("Right-tail p = ", format.pval(p_value, digits = 4))
+      ),
+      lty = c(2, NA),
+      lwd = c(2, NA),
+      col = c("red", NA),
+      bty = "n"
+    )
+  })
+
+
   # -------------------------------------------------------
   # QUESTION 1 - CHI-SQUARE ASSUMPTION CHECK
   # -------------------------------------------------------
@@ -1119,6 +1217,92 @@ server <- function(input, output) {
   })
 
 
+  output$q1_hom_chisq_plot <- renderPlot({
+
+    test <- q1_hom_test()
+
+    df_chi <- unname(test$parameter)
+    stat <- unname(test$statistic)
+    p_value <- test$p.value
+
+    x_max <- max(
+      qchisq(0.999, df = df_chi),
+      stat * 1.15
+    )
+
+    x <- seq(
+      0.01,
+      x_max,
+      length.out = 1000
+    )
+
+    y <- dchisq(
+      x,
+      df = df_chi
+    )
+
+    plot(
+      x,
+      y,
+      type = "l",
+      lwd = 2,
+      xlab = expression(chi^2),
+      ylab = "Density",
+      main = paste(
+        "Chi-square Distribution (df =",
+        df_chi,
+        ")"
+      )
+    )
+
+    tail_x <- seq(
+      stat,
+      x_max,
+      length.out = 500
+    )
+
+    tail_y <- dchisq(
+      tail_x,
+      df = df_chi
+    )
+
+    polygon(
+      c(stat, tail_x, x_max),
+      c(0, tail_y, 0),
+      col = adjustcolor(
+        "red",
+        alpha.f = 0.25
+      ),
+      border = NA
+    )
+
+    lines(
+      x,
+      y,
+      lwd = 2
+    )
+
+    abline(
+      v = stat,
+      col = "red",
+      lty = 2,
+      lwd = 2
+    )
+
+    legend(
+      "topright",
+      legend = c(
+        paste0("Observed χ² = ", round(stat, 3)),
+        paste0("Right-tail p = ", format.pval(p_value, digits = 4))
+      ),
+      lty = c(2, NA),
+      lwd = c(2, NA),
+      col = c("red", NA),
+      bty = "n"
+    )
+  })
+
+
   output$q1_hom_interpretation <- renderPrint({
 
     test <- q1_hom_test()
@@ -1256,6 +1440,92 @@ server <- function(input, output) {
 
   output$q1_cmh <- renderPrint({
     q1_cmh_test()
+  })
+
+
+  output$q1_cmh_chisq_plot <- renderPlot({
+
+    test <- q1_cmh_test()
+
+    df_chi <- unname(test$parameter)
+    stat <- unname(test$statistic)
+    p_value <- test$p.value
+
+    x_max <- max(
+      qchisq(0.999, df = df_chi),
+      stat * 1.15
+    )
+
+    x <- seq(
+      0.01,
+      x_max,
+      length.out = 1000
+    )
+
+    y <- dchisq(
+      x,
+      df = df_chi
+    )
+
+    plot(
+      x,
+      y,
+      type = "l",
+      lwd = 2,
+      xlab = expression(chi^2),
+      ylab = "Density",
+      main = paste(
+        "CMH Chi-square Distribution (df =",
+        df_chi,
+        ")"
+      )
+    )
+
+    tail_x <- seq(
+      stat,
+      x_max,
+      length.out = 500
+    )
+
+    tail_y <- dchisq(
+      tail_x,
+      df = df_chi
+    )
+
+    polygon(
+      c(stat, tail_x, x_max),
+      c(0, tail_y, 0),
+      col = adjustcolor(
+        "red",
+        alpha.f = 0.25
+      ),
+      border = NA
+    )
+
+    lines(
+      x,
+      y,
+      lwd = 2
+    )
+
+    abline(
+      v = stat,
+      col = "red",
+      lty = 2,
+      lwd = 2
+    )
+
+    legend(
+      "topright",
+      legend = c(
+        paste0("Observed χ² = ", round(stat, 3)),
+        paste0("Right-tail p = ", format.pval(p_value, digits = 4))
+      ),
+      lty = c(2, NA),
+      lwd = c(2, NA),
+      col = c("red", NA),
+      bty = "n"
+    )
   })
 
 
@@ -1437,4 +1707,5 @@ shinyApp(
   ui = ui,
   server = server
 )
+
 
