@@ -145,24 +145,31 @@ ui <- fluidPage(
 
           hatpc_panel(
             hypothesis = paste(
-              "H₀: The two selected categorical variables are independent.",
-              "H₁: The two selected categorical variables are associated."
+              "H₀: Course enrolment and paid employment status are independent.",
+              "H₁: Course enrolment and paid employment status are associated.",
+              "This tests whether employment status differs between DATA2002 and DATA2902 students."
             ),
 
             assumptions = paste(
-              "Observations are independent.",
-              "Variables are categorical.",
-              "Expected cell counts should be sufficiently large."
+              "Observations are independent: each row represents an individual student's survey response.",
+              "Both variables are categorical: course enrolment is DATA2002/DATA2902 and employment status is yes/no.",
+              "Expected cell counts must be sufficiently large for the chi-square approximation to be appropriate."
             ),
 
-            test_statistic =
-              "Pearson's χ² statistic compares observed and expected counts.",
+            test_statistic = paste(
+              "Pearson's χ² statistic compares the observed course-employment counts with the counts expected under independence.",
+              "A larger χ² value indicates a greater difference between the observed sample and what H₀ predicts."
+            ),
 
-            p_value =
-              "Compare the p-value with α = 0.05.",
+            p_value = paste(
+              "The p-value is the probability of obtaining a χ² statistic at least this extreme if course and employment were truly independent.",
+              "We compare it with α = 0.05."
+            ),
 
-            conclusion =
-              "If p < 0.05, reject H₀. Otherwise, fail to reject H₀."
+            conclusion = paste(
+              "If p < 0.05, reject H₀ and conclude that course enrolment and employment status are associated in this sample.",
+              "Otherwise, fail to reject H₀."
+            )
           ),
 
           tags$hr(),
@@ -204,26 +211,30 @@ ui <- fluidPage(
 
           hatpc_panel(
             hypothesis = paste(
-              "H₀: The distribution of paid employment status is",
-              "the same for DATA2002 and DATA2902 students.",
-              "H₁: The distributions differ between the two courses."
+              "H₀: The distribution of paid employment status is the same for DATA2002 and DATA2902 students.",
+              "H₁: The distribution of paid employment status differs between the two courses.",
+              "This compares the proportion of employed and non-employed students across the two course groups."
             ),
 
             assumptions = paste(
-              "Observations are independent.",
-              "The response variable is categorical.",
-              "Expected cell counts should be sufficiently large."
+              "Observations are independent: each row represents an individual student's survey response.",
+              "Course enrolment defines the groups, while employment status is the categorical response being compared.",
+              "Expected cell counts must be sufficiently large for the chi-square approximation."
             ),
 
-            test_statistic =
-              "Pearson's χ² statistic compares observed and expected frequencies.",
+            test_statistic = paste(
+              "Pearson's χ² statistic measures how far the observed employment counts in each course differ from the counts expected if both courses had the same employment distribution.",
+              "Larger differences produce a larger χ² statistic."
+            ),
 
-            p_value =
-              "Compare the p-value with α = 0.05.",
+            p_value = paste(
+              "The p-value measures how likely a difference this large would be if DATA2002 and DATA2902 actually had the same employment distribution.",
+              "We compare it with α = 0.05."
+            ),
 
             conclusion = paste(
-              "If p < 0.05, reject H₀ and conclude that the employment",
-              "distributions differ between DATA2002 and DATA2902."
+              "If p < 0.05, reject H₀ and conclude that the employment distribution differs between DATA2002 and DATA2902 students.",
+              "Otherwise, fail to reject H₀."
             )
           ),
 
@@ -241,27 +252,30 @@ ui <- fluidPage(
 
           hatpc_panel(
             hypothesis = paste(
-              "H₀: After controlling for Domestic/International status,",
-              "course enrolment and paid employment are conditionally independent.",
-              "H₁: They remain associated after controlling for student status."
+              "H₀: After controlling for Domestic/International status, course enrolment and paid employment status are conditionally independent.",
+              "H₁: An association remains after controlling for Domestic/International status.",
+              "This checks whether the course-employment relationship remains after accounting for differences in student status."
             ),
 
             assumptions = paste(
-              "Observations are independent.",
-              "Variables are categorical.",
-              "The association is examined across defined strata.",
-              "The common association is assumed to be comparable across strata."
+              "Observations are independent: each row represents an individual student's survey response.",
+              "Course enrolment and employment status are categorical, while Domestic/International status defines the strata.",
+              "The course-employment association should be reasonably comparable across the Domestic and International strata."
             ),
 
-            test_statistic =
-              "The Cochran-Mantel-Haenszel χ² statistic measures the adjusted association.",
+            test_statistic = paste(
+              "The Cochran-Mantel-Haenszel χ² statistic measures the association between course and employment after combining information across the Domestic and International strata.",
+              "It therefore provides an adjusted test rather than the unadjusted Pearson chi-square result."
+            ),
 
-            p_value =
-              "Compare the adjusted p-value with α = 0.05.",
+            p_value = paste(
+              "The adjusted p-value measures how likely an association this strong would be if course and employment were conditionally independent within the strata.",
+              "We compare it with α = 0.05."
+            ),
 
             conclusion = paste(
-              "If p < 0.05, reject H₀ and conclude that an association remains",
-              "after controlling for Domestic/International status."
+              "If p < 0.05, reject H₀ and conclude that the association remains after controlling for Domestic/International status.",
+              "Otherwise, fail to reject H₀."
             )
           ),
 
@@ -1423,3 +1437,4 @@ shinyApp(
   ui = ui,
   server = server
 )
+
