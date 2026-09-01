@@ -74,31 +74,31 @@ hatpc_panel <- function(
     tags$div(
       class = "hatpc-step",
       tags$strong("H — Hypothesis"),
-      p(hypothesis)
+      hypothesis
     ),
 
     tags$div(
       class = "hatpc-step",
       tags$strong("A — Assumptions"),
-      p(assumptions)
+      assumptions
     ),
 
     tags$div(
       class = "hatpc-step",
       tags$strong("T — Test Statistic"),
-      p(test_statistic)
+      test_statistic
     ),
 
     tags$div(
       class = "hatpc-step",
       tags$strong("P — P-value"),
-      p(p_value)
+      p_value
     ),
 
     tags$div(
       class = "hatpc-step",
       tags$strong("C — Conclusion"),
-      p(conclusion)
+      conclusion
     )
   )
 }
@@ -144,31 +144,27 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'independence'",
 
           hatpc_panel(
-            hypothesis = paste(
-              "H₀: Course enrolment and paid employment status are independent.",
-              "H₁: Course enrolment and paid employment status are associated.",
-              "This tests whether employment status differs between DATA2002 and DATA2902 students."
+            hypothesis = tagList(
+              p("H₀: Course enrolment and paid employment status are independent."),
+              p("H₁: Course enrolment and paid employment status are associated."),
+              p("This tests whether employment status differs between DATA2002 and DATA2902 students.")
             ),
 
-            assumptions = paste(
-              "Observations are independent: each row represents an individual student's survey response.",
-              "Both variables are categorical: course enrolment is DATA2002/DATA2902 and employment status is yes/no.",
-              "Expected cell counts must be sufficiently large for the chi-square approximation to be appropriate."
+            assumptions = tagList(
+              p("Observations are independent: each row represents an individual student's survey response."),
+              p("Both variables are categorical: course enrolment is DATA2002/DATA2902 and employment status is yes/no."),
+              p("Expected cell counts must be sufficiently large for the chi-square approximation to be appropriate.")
             ),
 
-            test_statistic = paste(
-              "Pearson's χ² statistic compares the observed course-employment counts with the counts expected under independence.",
-              "A larger χ² value indicates a greater difference between the observed sample and what H₀ predicts."
+            test_statistic = tagList(
+              p("Pearson's χ² statistic compares the observed course-employment counts with the counts expected under independence."),
+              uiOutput("q1_ind_hatpc_stat")
             ),
 
-            p_value = paste(
-              "The p-value is the probability of obtaining a χ² statistic at least this extreme if course and employment were truly independent.",
-              "We compare it with α = 0.05."
-            ),
+            p_value = uiOutput("q1_ind_hatpc_p"),
 
-            conclusion = paste(
-              "If p < 0.05, reject H₀ and conclude that course enrolment and employment status are associated in this sample.",
-              "Otherwise, fail to reject H₀."
+            conclusion = p(
+              "If p < 0.05, reject H₀ and conclude that course enrolment and employment status are associated in this sample. Otherwise, fail to reject H₀."
             )
           ),
 
@@ -210,31 +206,27 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'homogeneity'",
 
           hatpc_panel(
-            hypothesis = paste(
-              "H₀: The distribution of paid employment status is the same for DATA2002 and DATA2902 students.",
-              "H₁: The distribution of paid employment status differs between the two courses.",
-              "This compares the proportion of employed and non-employed students across the two course groups."
+            hypothesis = tagList(
+              p("H₀: The distribution of paid employment status is the same for DATA2002 and DATA2902 students."),
+              p("H₁: The distribution of paid employment status differs between the two courses."),
+              p("This compares the proportion of employed and non-employed students across the two course groups.")
             ),
 
-            assumptions = paste(
-              "Observations are independent: each row represents an individual student's survey response.",
-              "Course enrolment defines the groups, while employment status is the categorical response being compared.",
-              "Expected cell counts must be sufficiently large for the chi-square approximation."
+            assumptions = tagList(
+              p("Observations are independent: each row represents an individual student's survey response."),
+              p("Course enrolment defines the groups, while employment status is the categorical response being compared."),
+              p("Expected cell counts must be sufficiently large for the chi-square approximation.")
             ),
 
-            test_statistic = paste(
-              "Pearson's χ² statistic measures how far the observed employment counts in each course differ from the counts expected if both courses had the same employment distribution.",
-              "Larger differences produce a larger χ² statistic."
+            test_statistic = tagList(
+              p("Pearson's χ² statistic measures how far the observed employment counts in each course differ from the counts expected if both courses had the same employment distribution."),
+              uiOutput("q1_hom_hatpc_stat")
             ),
 
-            p_value = paste(
-              "The p-value measures how likely a difference this large would be if DATA2002 and DATA2902 actually had the same employment distribution.",
-              "We compare it with α = 0.05."
-            ),
+            p_value = uiOutput("q1_hom_hatpc_p"),
 
-            conclusion = paste(
-              "If p < 0.05, reject H₀ and conclude that the employment distribution differs between DATA2002 and DATA2902 students.",
-              "Otherwise, fail to reject H₀."
+            conclusion = p(
+              "If p < 0.05, reject H₀ and conclude that the employment distribution differs between DATA2002 and DATA2902 students. Otherwise, fail to reject H₀."
             )
           ),
 
@@ -251,31 +243,27 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'cmh'",
 
           hatpc_panel(
-            hypothesis = paste(
-              "H₀: After controlling for Domestic/International status, course enrolment and paid employment status are conditionally independent.",
-              "H₁: An association remains after controlling for Domestic/International status.",
-              "This checks whether the course-employment relationship remains after accounting for differences in student status."
+            hypothesis = tagList(
+              p("H₀: After controlling for Domestic/International status, course enrolment and paid employment status are conditionally independent."),
+              p("H₁: An association remains after controlling for Domestic/International status."),
+              p("This checks whether the course-employment relationship remains after accounting for differences in student status.")
             ),
 
-            assumptions = paste(
-              "Observations are independent: each row represents an individual student's survey response.",
-              "Course enrolment and employment status are categorical, while Domestic/International status defines the strata.",
-              "The course-employment association should be reasonably comparable across the Domestic and International strata."
+            assumptions = tagList(
+              p("Observations are independent: each row represents an individual student's survey response."),
+              p("Course enrolment and employment status are categorical, while Domestic/International status defines the strata."),
+              p("The course-employment association should be reasonably comparable across the Domestic and International strata.")
             ),
 
-            test_statistic = paste(
-              "The Cochran-Mantel-Haenszel χ² statistic measures the association between course and employment after combining information across the Domestic and International strata.",
-              "It therefore provides an adjusted test rather than the unadjusted Pearson chi-square result."
+            test_statistic = tagList(
+              p("The Cochran-Mantel-Haenszel χ² statistic measures the association between course and employment after combining information across the Domestic and International strata."),
+              uiOutput("q1_cmh_hatpc_stat")
             ),
 
-            p_value = paste(
-              "The adjusted p-value measures how likely an association this strong would be if course and employment were conditionally independent within the strata.",
-              "We compare it with α = 0.05."
-            ),
+            p_value = uiOutput("q1_cmh_hatpc_p"),
 
-            conclusion = paste(
-              "If p < 0.05, reject H₀ and conclude that the association remains after controlling for Domestic/International status.",
-              "Otherwise, fail to reject H₀."
+            conclusion = p(
+              "If p < 0.05, reject H₀ and conclude that the association remains after controlling for Domestic/International status. Otherwise, fail to reject H₀."
             )
           ),
 
@@ -1030,6 +1018,34 @@ server <- function(input, output) {
   })
 
 
+  output$q1_ind_hatpc_stat <- renderUI({
+    test <- q1_ind_test()
+
+    p(
+      paste0(
+        "χ² = ",
+        round(unname(test$statistic), 3)
+      )
+    )
+  })
+
+
+  output$q1_ind_hatpc_p <- renderUI({
+    test <- q1_ind_test()
+
+    p(
+      paste0(
+        "p = ",
+        format.pval(
+          test$p.value,
+          digits = 4,
+          eps = 0.0001
+        )
+      )
+    )
+  })
+
+
   output$q1_ind_chisq_plot <- renderPlot({
 
     test <- q1_ind_test()
@@ -1271,6 +1287,34 @@ server <- function(input, output) {
   })
 
 
+  output$q1_hom_hatpc_stat <- renderUI({
+    test <- q1_hom_test()
+
+    p(
+      paste0(
+        "χ² = ",
+        round(unname(test$statistic), 3)
+      )
+    )
+  })
+
+
+  output$q1_hom_hatpc_p <- renderUI({
+    test <- q1_hom_test()
+
+    p(
+      paste0(
+        "p = ",
+        format.pval(
+          test$p.value,
+          digits = 4,
+          eps = 0.0001
+        )
+      )
+    )
+  })
+
+
   output$q1_hom_chisq_plot <- renderPlot({
 
     test <- q1_hom_test()
@@ -1494,6 +1538,34 @@ server <- function(input, output) {
 
   output$q1_cmh <- renderPrint({
     q1_cmh_test()
+  })
+
+
+  output$q1_cmh_hatpc_stat <- renderUI({
+    test <- q1_cmh_test()
+
+    p(
+      paste0(
+        "χ² = ",
+        round(unname(test$statistic), 3)
+      )
+    )
+  })
+
+
+  output$q1_cmh_hatpc_p <- renderUI({
+    test <- q1_cmh_test()
+
+    p(
+      paste0(
+        "p = ",
+        format.pval(
+          test$p.value,
+          digits = 4,
+          eps = 0.0001
+        )
+      )
+    )
   })
 
 
@@ -1761,5 +1833,6 @@ shinyApp(
   ui = ui,
   server = server
 )
+
 
 
