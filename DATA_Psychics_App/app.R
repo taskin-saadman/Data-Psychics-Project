@@ -442,7 +442,15 @@ ui <- fluidPage(
               
               h4("Test Result"),
               
-              verbatimTextOutput("q1_cmh")
+              verbatimTextOutput("q1_cmh"),
+              
+              h4("Adjusted Interpretation"),
+              
+              verbatimTextOutput("q1_cmh_interpretation"),
+              
+              h4("Unadjusted vs Adjusted Comparison"),
+              
+              verbatimTextOutput("q1_cmh_comparison")
             )
           )
         ),
@@ -1102,6 +1110,180 @@ server <- function(input, output) {
   
   output$q1_cmh <- renderPrint({
     q1_cmh_test()
+  })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - CMH ADJUSTED INTERPRETATION
+  # -------------------------------------------------------
+  output$q1_cmh_interpretation <- renderPrint({
+    
+    test <- q1_cmh_test()
+    p_value <- test$p.value
+    
+    cat(
+      "Null hypothesis: After controlling for Domestic/International ",
+      "student status, course enrolment and paid employment status ",
+      "are conditionally independent.\n\n"
+    )
+    
+    cat(
+      "Alternative hypothesis: After controlling for Domestic/International ",
+      "student status, course enrolment and paid employment status ",
+      "remain associated.\n\n"
+    )
+    
+    cat(
+      "CMH chi-square statistic:",
+      round(unname(test$statistic), 3),
+      "\n"
+    )
+    
+    cat(
+      "Degrees of freedom:",
+      unname(test$parameter),
+      "\n"
+    )
+    
+    cat(
+      "Adjusted P-value:",
+      format.pval(
+        p_value,
+        digits = 4,
+        eps = 0.0001
+      ),
+      "\n"
+    )
+    
+    if (!is.null(test$estimate)) {
+      
+      cat(
+        "Common odds ratio estimate:",
+        round(unname(test$estimate), 3),
+        "\n"
+      )
+    }
+    
+    if (!is.null(test$conf.int)) {
+      
+      cat(
+        "95% confidence interval for the common odds ratio:",
+        paste0(
+          "(",
+          round(test$conf.int[1], 3),
+          ", ",
+          round(test$conf.int[2], 3),
+          ")"
+        ),
+        "\n"
+      )
+    }
+    
+    cat("\n")
+    
+    if (p_value < 0.05) {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
+        "There is statistically significant evidence of an association ",
+        "between course enrolment and paid employment status even after ",
+        "controlling for Domestic/International student status."
+      )
+      
+    } else {
+      
+      cat(
+        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
+        "After controlling for Domestic/International student status, ",
+        "there is insufficient evidence of an association between course ",
+        "enrolment and paid employment status."
+      )
+    }
+  })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - UNADJUSTED VS ADJUSTED COMPARISON
+  # -------------------------------------------------------
+  output$q1_cmh_comparison <- renderPrint({
+    
+    unadjusted_test <- q1_hom_test()
+    adjusted_test <- q1_cmh_test()
+    
+    unadjusted_p <- unadjusted_test$p.value
+    adjusted_p <- adjusted_test$p.value
+    
+    cat("Unadjusted Pearson chi-square analysis\n")
+    
+    cat(
+      "P-value:",
+      format.pval(
+        unadjusted_p,
+        digits = 4,
+        eps = 0.0001
+      ),
+      "\n\n"
+    )
+    
+    cat(
+      "CMH analysis adjusted for Domestic/International status\n"
+    )
+    
+    cat(
+      "P-value:",
+      format.pval(
+        adjusted_p,
+        digits = 4,
+        eps = 0.0001
+      ),
+      "\n\n"
+    )
+    
+    if (
+      unadjusted_p < 0.05 &&
+      adjusted_p < 0.05
+    ) {
+      
+      cat(
+        "Comparison: Both the unadjusted and adjusted analyses are ",
+        "statistically significant. The evidence of an association ",
+        "between course enrolment and employment status remains after ",
+        "controlling for Domestic/International student status."
+      )
+      
+    } else if (
+      unadjusted_p < 0.05 &&
+      adjusted_p >= 0.05
+    ) {
+      
+      cat(
+        "Comparison: The unadjusted association is statistically ",
+        "significant, but the adjusted CMH association is not. ",
+        "This suggests that differences in the Domestic/International ",
+        "student mix may help explain the unadjusted association."
+      )
+      
+    } else if (
+      unadjusted_p >= 0.05 &&
+      adjusted_p < 0.05
+    ) {
+      
+      cat(
+        "Comparison: The unadjusted analysis is not statistically ",
+        "significant, but the adjusted CMH analysis is. Controlling for ",
+        "Domestic/International student status reveals evidence of an ",
+        "association that was not apparent in the unadjusted analysis."
+      )
+      
+    } else {
+      
+      cat(
+        "Comparison: Neither the unadjusted nor the adjusted analysis ",
+        "is statistically significant. There is insufficient evidence ",
+        "of an association between course enrolment and employment status ",
+        "before or after controlling for Domestic/International student status."
+      )
+    }
   })
 }
 
