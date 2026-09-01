@@ -139,6 +139,21 @@ ui <- fluidPage(
           
           p(
             "Controls for Domestic/International student status."
+          ),
+          
+          radioButtons(
+            inputId = "q1_cmh_view",
+            label = "View contingency table for:",
+            choices = c(
+              "Combined" = "Combined",
+              levels(df$intl_dom_type)
+            ),
+            selected = "Combined"
+          ),
+          
+          p(
+            "The selected view is for exploration only. ",
+            "The CMH test will use all Domestic/International strata together."
           )
         )
       ),
@@ -420,6 +435,12 @@ ui <- fluidPage(
                 "and employment status while controlling for ",
                 "Domestic/International student status."
               ),
+              
+              h4("Contingency Table by Student Status"),
+              
+              tableOutput("q1_cmh_view_table"),
+              
+              h4("Test Result"),
               
               verbatimTextOutput("q1_cmh")
             )
@@ -997,8 +1018,90 @@ server <- function(input, output) {
   })
   
   
+  # -------------------------------------------------------
+  # QUESTION 1 - CMH STRATUM VIEW
+  # -------------------------------------------------------
+  q1_cmh_view_table <- reactive({
+    
+    req(input$q1_cmh_view)
+    
+    if (input$q1_cmh_view == "Combined") {
+      
+      table(
+        df$type_2X02,
+        df$employment_y_n,
+        dnn = c("Course enrolment", "Employment status")
+      )
+      
+    } else {
+      
+      cmh_subset <- df %>%
+        filter(intl_dom_type == input$q1_cmh_view)
+      
+      table(
+        cmh_subset$type_2X02,
+        cmh_subset$employment_y_n,
+        dnn = c("Course enrolment", "Employment status")
+      )
+    }
+  })
+  
+  
+  output$q1_cmh_view_table <- renderTable({
+    q1_cmh_view_table()
+  }, rownames = TRUE)
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - CMH 3D CONTINGENCY TABLE
+  # -------------------------------------------------------
+  q1_cmh_table <- reactive({
+    
+    table(
+      df$type_2X02,
+      df$employment_y_n,
+      df$intl_dom_type,
+      dnn = c(
+        "Course enrolment",
+        "Employment status",
+        "Domestic/International status"
+      )
+    )
+  })
+  
+  
+  # -------------------------------------------------------
+  # QUESTION 1 - COCHRAN-MANTEL-HAENSZEL TEST
+  # -------------------------------------------------------
+  q1_cmh_test <- reactive({
+    
+    cmh_table <- q1_cmh_table()
+    
+    validate(
+      need(
+        length(dim(cmh_table)) == 3,
+        "The CMH analysis requires a three-dimensional contingency table."
+      ),
+      need(
+        dim(cmh_table)[1] == 2 &&
+          dim(cmh_table)[2] == 2,
+        "The CMH test requires two levels for course enrolment and two levels for employment status."
+      ),
+      need(
+        dim(cmh_table)[3] >= 2,
+        "The CMH test requires at least two Domestic/International strata."
+      )
+    )
+    
+    mantelhaen.test(
+      cmh_table,
+      correct = FALSE
+    )
+  })
+  
+  
   output$q1_cmh <- renderPrint({
-    "Cochran-Mantel-Haenszel test will be implemented in a separate commit."
+    q1_cmh_test()
   })
 }
 
