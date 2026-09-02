@@ -144,11 +144,7 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'independence'",
 
           hatpc_panel(
-            hypothesis = tagList(
-              p("H₀: Course enrolment and paid employment status are independent."),
-              p("H₁: Course enrolment and paid employment status are associated."),
-              p("This tests whether employment status differs between DATA2002 and DATA2902 students.")
-            ),
+            hypothesis = uiOutput("q1_ind_hatpc_hypothesis"),
 
             assumptions = tagList(
               p("Observations are independent: each row represents an individual student's survey response."),
@@ -304,7 +300,7 @@ ui <- fluidPage(
           selectInput(
             inputId = "drop2_xvar",
             label = "Grouping Variables:",
-            choices = nominal_choices[-3],
+            choices = nominal_choices[-3]
             #selected = "intl_dom_type"
           ),
 
@@ -320,7 +316,7 @@ ui <- fluidPage(
             selectInput(
               inputId = "drop2_yvar_num",
               label = "Numerical Variables:",
-              choices = numeric_choices,
+              choices = numeric_choices
               #selected = "travel_to_campus_min"
             )
           ),
@@ -331,7 +327,7 @@ ui <- fluidPage(
             selectInput(
               inputId = "drop2_yvar_ord",
               label = "Ordinal Variables:",
-              choices = ordinal_choices,
+              choices = ordinal_choices
               #selected = "grade_1X01"
             )
           )
@@ -528,10 +524,7 @@ ui <- fluidPage(
 
               h4("Pearson Chi-square Test of Independence"),
 
-              p(
-                "This test examines whether DATA2002/DATA2902 enrolment ",
-                "is associated with paid employment status."
-              ),
+              uiOutput("q1_ind_research_question"),
 
               h4("Contingency Table Display"),
 
@@ -1052,6 +1045,80 @@ server <- function(input, output) {
       ) +
       theme_minimal()
   })
+
+  q1_ind_variable_label <- function(variable) {
+
+    labels <- c(
+      "intl_dom_type" = "Domestic/International student status",
+      "type_2X02" = "DATA2002/DATA2902 enrolment",
+      "assessment_workflow" = "assessment workflow",
+      "workflow_grouped" = "grouped assessment workflow",
+      "rent_y_n" = "rent status",
+      "employment_y_n" = "paid employment status",
+      "multitask_y_n" = "multitasking status"
+    )
+
+    unname(labels[variable])
+  }
+
+
+  output$q1_ind_hatpc_hypothesis <- renderUI({
+
+    req(input$q1_ind_x, input$q1_ind_y)
+
+    x_label <- q1_ind_variable_label(input$q1_ind_x)
+    y_label <- q1_ind_variable_label(input$q1_ind_y)
+
+    tagList(
+      p(
+        paste0(
+          "H₀: ",
+          x_label,
+          " and ",
+          y_label,
+          " are independent."
+        )
+      ),
+      p(
+        paste0(
+          "H₁: ",
+          x_label,
+          " and ",
+          y_label,
+          " are associated."
+        )
+      ),
+      p(
+        paste0(
+          "This tests whether ",
+          x_label,
+          " is associated with ",
+          y_label,
+          "."
+        )
+      )
+    )
+  })
+
+
+  output$q1_ind_research_question <- renderUI({
+
+    req(input$q1_ind_x, input$q1_ind_y)
+
+    x_label <- q1_ind_variable_label(input$q1_ind_x)
+    y_label <- q1_ind_variable_label(input$q1_ind_y)
+
+    p(
+      paste0(
+        "This test examines whether ",
+        x_label,
+        " is associated with ",
+        y_label,
+        "."
+      )
+    )
+  })
+
 
   q1_ind_table <- reactive({
 
@@ -1927,6 +1994,7 @@ shinyApp(
   ui = ui,
   server = server
 )
+
 
 
 
