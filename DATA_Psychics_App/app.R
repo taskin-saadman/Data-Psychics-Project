@@ -451,7 +451,9 @@ ui <- fluidPage(
             spending more than 1.5 × 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work,
             with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations
             such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (Bollu et al., 2018), or exactly zero hours a day.
-            (note to self, need to find something for water consumption)"
+            Although a subset of observations reported water consumption values far above the typical range, manual inspection of such records indicated no inconsistencies in the accompanying data.
+            Given the plausibility of genuine high intake, such as due to medical or lifestyle factors, these observations were retained rather than treated as errors. 
+            Similarly, entries reporting 0 litres of daily water consumption were retained, as it may reflect individuals who hydrate through other beverages and therefore did not report any “plain water” consumption."
           ),
 
           p(
@@ -634,18 +636,24 @@ ui <- fluidPage(
               value = "intro_q2",
 
               h4("Research Question"),
-              p("Is there a difference in the means of student's", textOutput("chosen_var", inline = TRUE), # Reactive text inline
-              "when divided by", textOutput("grouping_var", inline = TRUE),"?"),
+              p("Is there a difference in the means of student's", 
+                textOutput("chosen_var", inline = TRUE),
+              "when divided by", 
+              textOutput("grouping_var", inline = TRUE),"?"),
 
               h4("Assumptions"),
               h5("Student Two Sample T-Test"),
-              p("insert assumptions"),
+              p("Independence within and between groups: each row represents an individual student's survey response."),
+              p("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
+              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),
               
               h5("Welch Two Sample T-Test"),
-              p("insert assumptions"),
+              p("Independence within and between groups: each row represents an individual student's survey response."),
+              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),
               
               h5("Wilcoxon Rank-Sum Test"),
-              p("insert assumptions")
+              p("Independence: groups are independent of one another."),
+              p("Same Distribution: groups follow the same distribution, differing by shift.")
               
             ),
 
@@ -724,16 +732,18 @@ server <- function(input, output) {
   # QUESTION 2 - INTRODUCTION
   # -------------------------------------------------------  
   output$grouping_var <- renderText({
-    input$drop2_xvar
+    names(nominal_choices)[nominal_choices == input$drop2_xvar]
   })
   
   output$chosen_var <- renderText({
-    # Check what the radio button is set to
-    if (input$yvar_type == "Numerical") {
-      return(input$drop2_yvar_num)
-    } else {
-      return(input$drop2_yvar_ord)
-    }
+    #identify which raw name was selected based on the active radio button
+    raw_val <- if (input$yvar_type == "Numerical") input$drop2_yvar_num else input$drop2_yvar_ord
+      
+    #combine lists to map backend name back to its display label
+    all_choices <- c(numeric_choices, ordinal_choices)
+    clean_label <- names(all_choices)[all_choices == raw_val]
+      
+    return(clean_label)
   })
   
   # -------------------------------------------------------
