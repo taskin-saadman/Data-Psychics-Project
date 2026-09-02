@@ -423,12 +423,6 @@ ui <- fluidPage(
           h2("Data Processing"),
           h3("Critique of Survey Questions"),
           p(
-            "Although the survey was explicitly framed around understanding student learning pathways, many of the questions feel irrelevant and do not translate into clear, targeted measures of those pathways 
-            by the unit to investigate student learning pathways or their key factors. This misalignment makes it difficult to robustly answer the unit's own research, even though students are encouraged to use 
-            the data freely for their own research questions."
-          ),
-          
-          p(
             "The survey also contained inconsistencies in how key variables were recorded, particularly in the use of both numerical and Boolean formats for some items but not others.
             For example, rent was assessed through a numerical amount and a separate yes/no question, whereas employment was captured solely through weekly hours. 
             This uneven structure resulted in contradictory entries that needed to be fixed later on \"no\" rent paired with a positive rent value, or vice versa. 
