@@ -657,7 +657,7 @@ ui <- fluidPage(
               title = "Two Sample test",
               value = "two_sample_q2",
 
-              verbatimTextOutput("out2")
+              uiOutput("out2")
             )
           )
         ),
