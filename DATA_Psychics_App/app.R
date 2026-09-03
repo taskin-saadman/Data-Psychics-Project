@@ -914,6 +914,10 @@ server <- function(input, output) {
     )
   })
 
+  # -------------------------------------------------------
+  # QUESTION 3 - RESAMPLING MONTE CARLO
+  # -------------------------------------------------------
+  
   perm_res <- eventReactive(input$run_perm, {
     req(df)
 
@@ -1994,7 +1998,3 @@ shinyApp(
   ui = ui,
   server = server
 )
-
-
-
-
