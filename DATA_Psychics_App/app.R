@@ -288,6 +288,10 @@ ui <- fluidPage(
         )
       ),
 
+      
+      #-----------
+      # QUESTION 2
+      #-----------
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
 
@@ -634,22 +638,38 @@ ui <- fluidPage(
               "when divided by", 
               textOutput("grouping_var", inline = TRUE),"?"),
               
-              p("To evaluate the research question based on the user's selected variables, 
-                our program detects which two sample test is most suitable based on the test assumptions:"),
+              p("To evaluate the research question based on the selected variables, 
+                our program detects which two sample test is most suitable following the assumptions:"),
 
+              
+              tags$strong("Variables used:"),
+              
+              tags$ul(
+                tags$li("Course enrolment"),
+                tags$li("Paid employment status"),
+                tags$li("Domestic/International student status")
+              )
+            ),
+            
               h5("Assumptions"),
               h5("Student Two Sample T-Test"),
-              p("Independence within and between groups: each row represents an individual student's survey response."),
-              p("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
-              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),
+              tags$ul(
+              tags$li("Quantitative: data values collected are quantitative."),
+              tags$li("Independence within and between groups: each row represents an individual student's survey response."),
+              tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
+              tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),
               
               h5("Welch Two Sample T-Test"),
+              p("Quantitative: data values collected are quantitative."),
               p("Independence within and between groups: each row represents an individual student's survey response."),
-              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),
+              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),     
               
               h5("Wilcoxon Rank-Sum Test"),
               p("Independence: groups are independent of one another."),
-              p("Same Distribution: groups follow the same distribution, differing by shift.")
+              p("Same Distribution: groups follow the same distribution, differing by shift."),
+              
+              p("If the user chose a numerical variable, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
+                If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. For ordinal data, the Wilcoxon Rank-Sum test is conducted.")
               
             ),
 
