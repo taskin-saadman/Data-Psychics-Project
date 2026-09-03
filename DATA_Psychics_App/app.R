@@ -144,11 +144,7 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'independence'",
 
           hatpc_panel(
-            hypothesis = tagList(
-              p("H₀: Course enrolment and paid employment status are independent."),
-              p("H₁: Course enrolment and paid employment status are associated."),
-              p("This tests whether employment status differs between DATA2002 and DATA2902 students.")
-            ),
+            hypothesis = uiOutput("q1_ind_hatpc_hypothesis"),
 
             assumptions = tagList(
               p("Observations are independent: each row represents an individual student's survey response."),
@@ -304,7 +300,7 @@ ui <- fluidPage(
           selectInput(
             inputId = "drop2_xvar",
             label = "Grouping Variables:",
-            choices = nominal_choices[-3],
+            choices = nominal_choices[-3]
             #selected = "intl_dom_type"
           ),
 
@@ -320,7 +316,7 @@ ui <- fluidPage(
             selectInput(
               inputId = "drop2_yvar_num",
               label = "Numerical Variables:",
-              choices = numeric_choices,
+              choices = numeric_choices
               #selected = "travel_to_campus_min"
             )
           ),
@@ -331,7 +327,7 @@ ui <- fluidPage(
             selectInput(
               inputId = "drop2_yvar_ord",
               label = "Ordinal Variables:",
-              choices = ordinal_choices,
+              choices = ordinal_choices
               #selected = "grade_1X01"
             )
           )
@@ -528,10 +524,7 @@ ui <- fluidPage(
 
               h4("Pearson Chi-square Test of Independence"),
 
-              p(
-                "This test examines whether DATA2002/DATA2902 enrolment ",
-                "is associated with paid employment status."
-              ),
+              uiOutput("q1_ind_research_question"),
 
               h4("Contingency Table Display"),
 
@@ -749,86 +742,176 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 2 - TWO SAMPLE T-TEST
   # -------------------------------------------------------
-  output$out2 <- renderPrint({
-
+  output$out2 <- renderUI({
+    
+    alpha <- 0.05
+    
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    sig  <- "σ"   # σ
+    neq  <- "≠"   # ≠
+    sim  <- "∼"   # ∼
+    dots <- "…"   # …
+    
+    hypothesis <- glue("H₀: {mu}x = {mu}y H₁: {mu}x {neq} {mu}y")
+    
     xvar <- input$drop2_xvar
-
+    
     if (input$yvar_type == "Numerical") {
-
+      
       yvar <- input$drop2_yvar_num
-
+      
       f <- as.formula(
         paste(yvar, "~", xvar)
       )
-
+      
       p_equal_var <- levene_test(
         f,
         data = df
       ) %>%
         pull(p)
-
-      if (p_equal_var < 0.05) {
-
-        return(
-          list(
-            glue(
-              "We will conduct a Welch's t-test,
-              as the p-value for Levene's test = {p_equal_var}
-              is less than the significance level of 0.05
-              (heteroscedasticity)."
-            ),
-
-            df |>
-              t.test(
-                formula = f,
-                data = _
-              )
+      
+      if (p_equal_var < alpha) {
+        test_type <- "welch"
+        test_name <- "Welch's t-test"
+        tt <- df |>
+          t.test(
+            formula = f,
+            data = _
           )
-        )
-
       } else {
-
-        return(
-          list(
-            glue(
-              "We will conduct a Student's t-test,
-              as the p-value for Levene's test = {p_equal_var}
-              is more than the significance level of 0.05
-              (homoscedasticity)."
-            ),
-
-            df |>
-              t.test(
-                formula = f,
-                var.equal = TRUE,
-                data = _
-              )
+        test_type <- "student"
+        test_name <- "Student's t-test"
+        tt <- df |>
+          t.test(
+            formula = f,
+            var.equal = TRUE,
+            data = _
           )
+      }
+      
+      stat <- signif(unname(tt$statistic), 4)
+      dof  <- signif(unname(tt$parameter), 4)
+      pval <- signif(tt$p.value, 4)
+      lev  <- signif(p_equal_var, 4)
+      
+      reject <- tt$p.value < alpha
+      
+      if (test_type == "student") {
+        
+        indep_clause <- if (reject) {
+          "Xi and Yi are independent and have equal variance."
+        } else {
+          "Xi and Yi are independent."
+        }
+        
+        variance_clause <- glue(
+          "Using Levene's test, as {lev} is greater than 0.05, X and Y have similar ",
+          "variances and the Student's t-test is used."
+        )
+        
+      } else {
+        
+        indep_clause <- "Xi and Yi are independent and have equal variance."
+        
+        variance_clause <- glue(
+          "Using Levene's test, as {lev} is less than 0.05, X and Y have different ",
+          "variances and the Welch's t-test is used."
         )
       }
-
+      
+      assumptions <- glue(
+        "X1, {dots} , Xnx are independent and identically distributed with the ",
+        "distribution N ({mu}X, {sig}2), Y1, {dots} , Yny are independent and ",
+        "identically distributed with the distribution N ({mu}Y , {sig}2), and ",
+        "{indep_clause} {variance_clause}"
+      )
+      
+      test_statistic <- glue(
+        "Under H₀,  T{sim} t{dof}. The test statistic is {stat}."
+      )
+      
+      conclusion <- if (reject) {
+        "Since the p-value < 0.05, we reject H₀."
+      } else {
+        "Since the p-value > 0.05, we do not reject H₀."
+      }
+      
     } else {
-
+      
       yvar <- input$drop2_yvar_ord
-
+      
       f <- as.formula(
         paste(yvar, "~", xvar)
       )
-
-      return(
-        list(
-          glue(
-            "We will conduct a Wilcoxon Rank-Sum test,
-            as the chosen y-variables are ordinal (categorical)."
-          ),
-
-          wilcox.test(
-            formula = f,
-            data = df
-          )
-        )
+      
+      test_name <- "Wilcoxon Rank Sum Test"
+      
+      wt <- wilcox.test(
+        formula = f,
+        data = df
       )
+      
+      stat <- signif(unname(wt$statistic), 4)
+      pval <- signif(wt$p.value, 4)
+      
+      reject <- wt$p.value < alpha
+      
+      assumptions <- "Xi and Yi are independent and follow the same distribution but differ by a shift."
+      
+      test_statistic <- glue(
+        "Under H₀,  W follows the WRS(nX, nY ) distribution. ",
+        "The test statistic is {stat}."
+      )
+      
+      conclusion <- if (reject) {
+        "Since the p-value < 0.05, we reject H₀."
+      } else {
+        "Since the p-value > 0.05, we do not reject H₀."
+      }
     }
+    
+    tags$div(
+      class = "hatpc-panel",
+      
+      h4(paste0("Test performed: ", test_name)),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Significance level"),
+        p("alpha = 0.05")
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Hypothesis"),
+        p(hypothesis)
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Assumptions"),
+        p(assumptions)
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Test-statistic"),
+        p(test_statistic)
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("p-value"),
+        p(paste0("The p-value is ", pval, "."))
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Conclusion"),
+        p(conclusion)
+      )
+    )
   })
 
   perm_res <- eventReactive(input$run_perm, {
@@ -962,6 +1045,80 @@ server <- function(input, output) {
       ) +
       theme_minimal()
   })
+
+  q1_ind_variable_label <- function(variable) {
+
+    labels <- c(
+      "intl_dom_type" = "Domestic/International student status",
+      "type_2X02" = "DATA2002/DATA2902 enrolment",
+      "assessment_workflow" = "assessment workflow",
+      "workflow_grouped" = "grouped assessment workflow",
+      "rent_y_n" = "rent status",
+      "employment_y_n" = "paid employment status",
+      "multitask_y_n" = "multitasking status"
+    )
+
+    unname(labels[variable])
+  }
+
+
+  output$q1_ind_hatpc_hypothesis <- renderUI({
+
+    req(input$q1_ind_x, input$q1_ind_y)
+
+    x_label <- q1_ind_variable_label(input$q1_ind_x)
+    y_label <- q1_ind_variable_label(input$q1_ind_y)
+
+    tagList(
+      p(
+        paste0(
+          "H₀: ",
+          x_label,
+          " and ",
+          y_label,
+          " are independent."
+        )
+      ),
+      p(
+        paste0(
+          "H₁: ",
+          x_label,
+          " and ",
+          y_label,
+          " are associated."
+        )
+      ),
+      p(
+        paste0(
+          "This tests whether ",
+          x_label,
+          " is associated with ",
+          y_label,
+          "."
+        )
+      )
+    )
+  })
+
+
+  output$q1_ind_research_question <- renderUI({
+
+    req(input$q1_ind_x, input$q1_ind_y)
+
+    x_label <- q1_ind_variable_label(input$q1_ind_x)
+    y_label <- q1_ind_variable_label(input$q1_ind_y)
+
+    p(
+      paste0(
+        "This test examines whether ",
+        x_label,
+        " is associated with ",
+        y_label,
+        "."
+      )
+    )
+  })
+
 
   q1_ind_table <- reactive({
 
@@ -1837,6 +1994,7 @@ shinyApp(
   ui = ui,
   server = server
 )
+
 
 
 
