@@ -48,9 +48,9 @@ nominal_choices <- c(
   "DATA2X02 Enrollment" = "type_2X02",
   "Assessment Workflow" = "assessment_workflow",
   "Grouped Workflow" = "workflow_grouped",
-  "Rent y/n" = "rent_y_n",
-  "Employment y/n" = "employment_y_n",
-  "Multitasking y/n" = "multitask_y_n"
+  "Rental Status (y/n)" = "rent_y_n",
+  "Employment Status (y/n)" = "employment_y_n",
+  "Multitasking Status (y/n)" = "multitask_y_n"
 )
 
 ordinal_choices <- c(
@@ -291,8 +291,8 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
 
-        conditionalPanel(
-          condition = "input.q2_tab == 'two_sample_q2'",
+        #conditionalPanel(
+        #  condition = "input.q2_tab == 'two_sample_q2'",
 
           h4("Two Sample Mean Test Options"),
           p("Please choose one grouping variable and one numerical/ordinal variable."),
@@ -331,8 +331,8 @@ ui <- fluidPage(
               #selected = "grade_1X01"
             )
           )
-        )
-      ),
+        ),
+      #),
 
       conditionalPanel(
         condition = "input.selected_tab == 'question3'",
@@ -633,8 +633,11 @@ ui <- fluidPage(
                 textOutput("chosen_var", inline = TRUE),
               "when divided by", 
               textOutput("grouping_var", inline = TRUE),"?"),
+              
+              p("To evaluate the research question based on the user's selected variables, 
+                our program detects which two sample test is most suitable based on the test assumptions:"),
 
-              h4("Assumptions"),
+              h5("Assumptions"),
               h5("Student Two Sample T-Test"),
               p("Independence within and between groups: each row represents an individual student's survey response."),
               p("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
