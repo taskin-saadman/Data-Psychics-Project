@@ -305,7 +305,6 @@ ui <- fluidPage(
           inputId = "drop2_xvar",
           label = "Grouping Variables:",
           choices = nominal_choices[-3]
-          #selected = "intl_dom_type"
         ),
         
         radioButtons(
@@ -321,7 +320,6 @@ ui <- fluidPage(
             inputId = "drop2_yvar_num",
             label = "Numerical Variables:",
             choices = numeric_choices
-            #selected = "travel_to_campus_min"
           )
         ),
         
@@ -344,11 +342,11 @@ ui <- fluidPage(
         conditionalPanel(
           condition = "input.q3_tab == 'q3_perm_employment'",
           
-          h4("Monte Carlo Permutation Options"),
+          h4("Monte Carlo simulation Options"),
           p("Permutation test for the difference in mean weekly working hours between DATA2002 and DATA2902 students."),
           
           numericInput(
-            inputId = "q1_B",
+            inputId = "q3_B",
             label = "Permutations:",
             value = 1000,
             min = 1,
@@ -356,7 +354,7 @@ ui <- fluidPage(
           ),
           
           actionButton(
-            inputId = "run_q1_perm",
+            inputId = "run_q3_perm",
             label = "Run Permutation Test",
             class = "btn-primary"
           )
@@ -365,7 +363,7 @@ ui <- fluidPage(
         conditionalPanel(
           condition = "input.q3_tab == 'q3_perm_multitask'",
           
-          h4("Monte Carlo Permutation Options"),
+          h4("Monte Carlo simulation Options"),
           
           selectInput(
             inputId = "perm_group",
@@ -633,15 +631,11 @@ ui <- fluidPage(
               value = "intro_q2",
               
               h4("Research Question"),
-              p("Is there a difference in the means of student's", 
-                textOutput("chosen_var", inline = TRUE),
-                "when divided by", 
-                textOutput("grouping_var", inline = TRUE),"?"),
+              uiOutput("rq_q2"),
               
               p("To evaluate the research question based on the selected variables, 
                 our program detects which two sample test is most suitable following the assumptions:"),
               
-              h5("Assumptions"),
               h5("Student Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
@@ -650,24 +644,36 @@ ui <- fluidPage(
                 tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),
               
               h5("Welch Two Sample T-Test"),
-              p("Quantitative: data values collected are quantitative."),
-              p("Independence within and between groups: each row represents an individual student's survey response."),
-              p("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."),     
+              tags$ul(
+                tags$li("Quantitative: data values collected are quantitative."),
+                tags$li("Independence within and between groups: each row represents an individual student's survey response."),
+                tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),     
               
               h5("Wilcoxon Rank-Sum Test"),
-              p("Independence: groups are independent of one another."),
-              p("Same Distribution: groups follow the same distribution, differing by shift."),
+              tags$ul(
+                tags$li("Independence: groups are independent of one another."),
+                tags$li("Same Distribution: groups follow the same distribution, differing by shift.")),
               
-              p("If the user chose a numerical variable, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
-                If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. For ordinal data, the Wilcoxon Rank-Sum test is conducted.")
+              p("If a numerical variable is chosen, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
+                If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
+                For ordinal data, the Wilcoxon Rank-Sum test is conducted.")
               
             ),
             
+            #second tabset
+            tabPanel(
+              title = "Assumption Checking",
+              value = "assumptions_q2",
+              
+              uiOutput("out2_assumptions")
+            ),
+            
+            #third tabset
             tabPanel(
               title = "Two Sample test",
               value = "two_sample_q2",
               
-              uiOutput("out2")
+              uiOutput("out2_test")
             )
           )
         ),
@@ -676,10 +682,28 @@ ui <- fluidPage(
           title = "QUESTION 3",
           value = "question3",
           
-          h3("Question 3 (Monte Carlo Permutation Tests)"),
+          h3("Question 3 (Monte Carlo simulation Tests)"),
           
           tabsetPanel(
             id = "q3_tab",
+            
+            tabPanel(
+              title = "Introduction",
+              value = "intro_q3",
+              
+              h4("Research Question"),
+              p("Is there a difference in the means of student's mean weekly working hours between DATA2002 and DATA2902 students using Monte Carlo simulation?"),
+              
+              p("To evaluate the research question based on the selected variables, 
+                our program detects which two sample test is most suitable following the assumptions:"),
+              
+              h5("Student Two Sample T-Test"),
+              tags$ul(
+                tags$li("Quantitative: data values collected are quantitative."),
+                tags$li("Independence within and between groups: each row represents an individual student's survey response."),
+                tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
+                tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."))
+            ),
             
             tabPanel(
               title = "Employment Hours",
@@ -687,12 +711,13 @@ ui <- fluidPage(
               
               h4("Permutation Test: Employment Hours Difference"),
               p(
-                "We use a Monte Carlo permutation test to evaluate if the difference in ",
+                "We use a Monte Carlo simulation test to evaluate if the difference in ",
                 "mean weekly employment hours between DATA2002 and DATA2902 students is statistically significant."
               ),
               
-              plotOutput("q1_perm_plot"),
-              verbatimTextOutput("q1_perm_summary")
+              plotOutput("q3_perm_plot_1"),
+              #verbatimTextOutput("q3_perm_summary_1"),
+              uiOutput("q3_perm_summary_1")
             ),
             
             tabPanel(
@@ -701,12 +726,13 @@ ui <- fluidPage(
               
               h4("Permutation Test: Multitasking Proportion Shifts"),
               p(
-                "We use a Monte Carlo permutation test to determine if the proportion of ",
+                "We use a Monte Carlo simulation test to determine if the proportion of ",
                 "students who multitask shifts significantly based on employment or rent status."
               ),
               
-              plotOutput("perm_plot"),
-              verbatimTextOutput("perm_summary")
+              plotOutput("q3_perm_plot_2"),
+              uiOutput("q3_perm_summary_2"),
+              
             )
           )
         ),
@@ -738,11 +764,10 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 2 - INTRODUCTION
   # -------------------------------------------------------  
-  output$grouping_var <- renderText({
-    names(nominal_choices)[nominal_choices == input$drop2_xvar]
-  })
-  
-  output$chosen_var <- renderText({
+  output$rq_q2 <- renderUI({
+    #get the grouping variable
+    grouping_var <- names(nominal_choices)[nominal_choices == input$drop2_xvar]
+    
     #identify which raw name was selected based on the active radio button
     raw_val <- if (input$yvar_type == "Numerical") input$drop2_yvar_num else input$drop2_yvar_ord
     
@@ -750,13 +775,24 @@ server <- function(input, output) {
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
     
-    return(clean_label)
+    p(paste0("Is there a difference in the means of student's ", clean_label, 
+             " when divided by ", grouping_var, "?"))
+  })
+  
+  # -------------------------------------------------------
+  # QUESTION 2 - ASSUMPTIONS
+  # -------------------------------------------------------  
+  output$out2_assumptions <- renderUI({
+    tags$div(
+      class = "hatpc-step",
+      tags$strong("Conclusion"),
+      p("HI THERE"))
   })
   
   # -------------------------------------------------------
   # QUESTION 2 - TWO SAMPLE T-TEST
   # -------------------------------------------------------
-  output$out2 <- renderUI({
+  output$out2_test <- renderUI({
     
     alpha <- 0.05
     
@@ -767,9 +803,12 @@ server <- function(input, output) {
     sim  <- "∼"   # ∼
     dots <- "…"   # …
     
-    hypothesis <- glue("H₀: {mu}x = {mu}y H₁: {mu}x {neq} {mu}y")
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
     xvar <- input$drop2_xvar
+    
+    groups <- levels(df[[xvar]])
     
     if (input$yvar_type == "Numerical") {
       
@@ -841,9 +880,9 @@ server <- function(input, output) {
         "{indep_clause} {variance_clause}"
       )
       
-      test_statistic <- glue(
-        "Under H₀,  T{sim} t{dof}. The test statistic is {stat}."
-      )
+      test_statistic <- p(HTML(glue(
+        "Under H₀,  T{sim} t<sub>{dof}</sub>. The test statistic is {stat}."
+      )))
       
       conclusion <- if (reject) {
         "Since the p-value < 0.05, we reject H₀."
@@ -899,6 +938,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Hypothesis"),
+        p(paste0("Let x: ", groups[1], " group and y: ", groups[2]), " group."),
         p(hypothesis)
       ),
       
@@ -967,25 +1007,173 @@ server <- function(input, output) {
     list(dist = diffs, obs_diff = obs_diff, pval = pval, success = success_level, group = group_var, g1 = g1, g2 = g2)
   }, ignoreNULL = FALSE)
   
-  output$perm_summary <- renderPrint({
+  #first tab
+  output$q3_perm_summary_1 <- renderPrint({
+    req(q3_perm_res())
+    res <- q3_perm_res()
+    
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    sig  <- "σ"   # σ
+    neq  <- "≠"   # ≠
+    sim  <- "∼"   # ∼
+    dots <- "…"   # …
+    
+    p("Monte Carlo simulation Test for difference in mean weekly employment hours\n")
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    
+    assumptions <- p(HTML(glue(
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples.",
+      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
+      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
+    
+    test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
+    
+    conclusion <- if (res$pval < 0.05) 
+      {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")} 
+    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")}
+    
+    tags$div(
+      class = "hatpc-panel",
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Significance level"),
+        p("alpha = 0.05")
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Hypothesis"),
+        p(paste0("Let x: DATA2002 group and y: DATA2X02 group."),
+        p(hypothesis)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Assumptions"),
+          p(assumptions)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Test-statistic"),
+          p(test_statistic)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("p-value"),
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B), ".")),
+          
+          
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Conclusion"),
+          p(conclusion))
+        )
+      )
+    )
+  })
+  
+  output$q3_perm_plot_1 <- renderPlot({
+    req(q3_perm_res())
+    res <- q3_perm_res()
+    
+    df_plot <- data.frame(val = res$dist)
+    
+    ggplot(df_plot, aes(x = val)) +
+      geom_histogram(bins = 30, fill = "#F5A623", color = "white") +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      labs(
+        title = "Null Distribution of Difference in Mean Employment Hours\n(DATA2002 - DATA2902)",
+        x = "Simulated Difference Under Null Hypothesis",
+        y = "Frequency"
+      ) +
+      theme_minimal()
+  })
+  
+  #second tab
+  output$q3_perm_summary_2 <- renderPrint({
     req(perm_res())
     res <- perm_res()
     
-    cat("Monte Carlo Permutation Test for difference in proportions (Level: '", res$success, "')\n", sep="")
-    cat("Grouping Variable: ", res$group, "\n")
-    cat("Test Statistic (Observed Difference): Proportion(", res$g1, ") - Proportion(", res$g2, ")\n\n", sep="")
+    B <- input$B
     
-    cat("Observed Difference: ", round(res$obs_diff, 4), "\n")
-    cat("Permutation P-value: ", format.pval(res$pval, eps = 1/input$B), "\n\n")
     
-    if(res$pval < 0.05) {
-      cat("Conclusion: At alpha = 0.05, we reject the null hypothesis. The proportion significantly shifts based on ", res$group, ".\n", sep="")
-    } else {
-      cat("Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence that the proportion significantly shifts based on ", res$group, ".\n", sep="")
-    }
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    sig  <- "σ"   # σ
+    neq  <- "≠"   # ≠
+    sim  <- "∼"   # ∼
+    dots <- "…"   # …
+    
+    p("Monte Carlo simulation Test for difference in mean weekly employment hours\n")
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    
+
+    assumptions <- p(HTML(glue(
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples.",
+      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
+      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
+    
+    test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
+    
+    conclusion <- if (res$pval < 0.05) 
+    {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")} 
+    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")}
+    
+    tags$div(
+      class = "hatpc-panel",
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Significance level"),
+        p("alpha = 0.05")
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Hypothesis"),
+        p(paste0("Let x: ", res$g1, " group and y: ", res$g2, " group."),
+          p(hypothesis)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Assumptions"),
+          p(assumptions)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Test-statistic"),
+          p(test_statistic)
+        ),
+        
+        #HEY NOTE TO WHO'S READING THIS: how do i make B change every time
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("p-value"),
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B), ", 
+                   calculated using, ", input$q3_B ," Monte Carlo resamples.")),
+          
+          
+          tags$div(
+            class = "hatpc-step",
+            tags$strong("Conclusion"),
+            p(conclusion))
+        )
+      )
+    )
   })
   
-  output$perm_plot <- renderPlot({
+  output$q3_perm_plot_2 <- renderPlot({
     req(perm_res())
     res <- perm_res()
     df_plot <- data.frame(val = res$dist)
@@ -1002,14 +1190,14 @@ server <- function(input, output) {
       theme_minimal()
   })
   
-  q1_perm_res <- eventReactive(input$run_q1_perm, {
+  q3_perm_res <- eventReactive(input$run_q3_perm, {
     req(df)
     
     validate(
-      need(input$q1_B >= 1 && input$q1_B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+      need(input$q3_B >= 1 && input$q3_B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
     )
     
-    B <- input$q1_B
+    B <- input$q3_B
     
     dat <- df %>% filter(!is.na(employment_hours), !is.na(type_2X02))
     
@@ -1028,41 +1216,11 @@ server <- function(input, output) {
     
     list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
   }, ignoreNULL = FALSE)
+
   
-  output$q1_perm_summary <- renderPrint({
-    req(q1_perm_res())
-    res <- q1_perm_res()
-    
-    cat("Monte Carlo Permutation Test for difference in mean weekly employment hours\n")
-    cat("Test Statistic: Mean(", res$g1, ") - Mean(", res$g2, ")\n\n", sep="")
-    
-    cat("Observed Difference: ", round(res$obs_diff, 4), " hours\n")
-    cat("Permutation P-value: ", format.pval(res$pval, eps = 1/input$q1_B), "\n\n")
-    
-    if(res$pval < 0.05) {
-      cat("Conclusion: At alpha = 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")
-    } else {
-      cat("Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")
-    }
-  })
-  
-  output$q1_perm_plot <- renderPlot({
-    req(q1_perm_res())
-    res <- q1_perm_res()
-    
-    df_plot <- data.frame(val = res$dist)
-    
-    ggplot(df_plot, aes(x = val)) +
-      geom_histogram(bins = 30, fill = "#F5A623", color = "white") +
-      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
-      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
-      labs(
-        title = "Null Distribution of Difference in Mean Employment Hours\n(DATA2002 - DATA2902)",
-        x = "Simulated Difference Under Null Hypothesis",
-        y = "Frequency"
-      ) +
-      theme_minimal()
-  })
+  #-------------------------------
+  # QUESTION 1
+  #-------------------------------
   
   q1_ind_variable_label <- function(variable) {
     
