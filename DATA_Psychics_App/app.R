@@ -58,7 +58,6 @@ ordinal_choices <- c(
   "Aspirational DATA2X02 Grade" = "grade_2X02"
 )
 
-
 hatpc_panel <- function(
     hypothesis,
     assumptions,
@@ -118,6 +117,20 @@ ui <- fluidPage(
   sidebarLayout(
     
     sidebarPanel(
+      
+      conditionalPanel(
+        condition = "input.selected_tab == 'intro'",
+        
+        h4("Group Members - L91G07"),
+        tags$ul(
+          tags$li("Ahnaf Tahmid Bhuiyan, 560268744"),
+          tags$li("Fanxi Liu (Felix), 541011817"),
+          tags$li("Nadhira Dania Nazaruddin, 550245287"),
+          tags$li("Sienna Grasso, 540491131"),
+          tags$li("Taskin Saadman, 541025803"),
+          tags$li("Tuhin Ajay Biswas, 550540584")
+        )
+      ),
       
       conditionalPanel(
         condition = "input.selected_tab == 'question1'",
@@ -330,11 +343,9 @@ ui <- fluidPage(
             inputId = "drop2_yvar_ord",
             label = "Ordinal Variables:",
             choices = ordinal_choices
-            #selected = "grade_1X01"
           )
         )
       ),
-      #),
       
       conditionalPanel(
         condition = "input.selected_tab == 'question3'",
@@ -346,7 +357,7 @@ ui <- fluidPage(
           p("Permutation test for the difference in mean weekly working hours between DATA2002 and DATA2902 students."),
           
           numericInput(
-            inputId = "q3_B",
+            inputId = "q3_B_1",
             label = "Permutations:",
             value = 1000,
             min = 1,
@@ -375,7 +386,7 @@ ui <- fluidPage(
           ),
           
           numericInput(
-            inputId = "B",
+            inputId = "q3_B_2",
             label = "Permutations:",
             value = 1000,
             min = 1,
@@ -677,6 +688,7 @@ ui <- fluidPage(
               title = "Two Sample test",
               value = "two_sample_q2",
               
+              plotOutput("out2_graph"),
               uiOutput("out2_test")
             )
           )
@@ -735,8 +747,7 @@ ui <- fluidPage(
               ),
               
               plotOutput("q3_perm_plot_2"),
-              uiOutput("q3_perm_summary_2"),
-              
+              uiOutput("q3_perm_summary_2")
             )
           )
         ),
@@ -765,16 +776,22 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
+  
+  q2_xvar <- reactive(input$drop2_xvar)
+  
+  q2_yvar <- reactive(if (input$yvar_type == "Numerical") input$drop2_yvar_num else input$drop2_yvar_ord)
+  
   # -------------------------------------------------------
   # QUESTION 2 - INTRODUCTION
   # -------------------------------------------------------  
   output$rq_q2 <- renderUI({
     #get the grouping variable
-    grouping_var <- names(nominal_choices)[nominal_choices == input$drop2_xvar]
+    raw_val <- q2_xvar()
+    grouping_var <- names(nominal_choices)[nominal_choices == raw_val]
     
     #identify which raw name was selected based on the active radio button
-    raw_val <- if (input$yvar_type == "Numerical") input$drop2_yvar_num else input$drop2_yvar_ord
-    
+    raw_val <- q2_yvar()
+
     #combine lists to map backend name back to its display label
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
@@ -796,6 +813,17 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 2 - TWO SAMPLE T-TEST
   # -------------------------------------------------------
+  output$out2_graph <- renderPlot({
+    xvar <- q2_xvar()
+    yvar <- q2_yvar()
+  
+   df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
+     (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
+      else geom_bar(color="#e9ecef", position = 'identity')) +
+     scale_fill_manual(values=c("#69b3a2", "#404080")) +
+     labs(fill="") + facet_wrap(~.data[[xvar]])
+  })
+  
   output$out2_test <- renderUI({
     
     alpha <- 0.05
@@ -975,46 +1003,40 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 3 - RESAMPLING MONTE CARLO
   # -------------------------------------------------------
-  
-  perm_res <- eventReactive(input$run_perm, {
+  q3_perm_res <- eventReactive(input$run_q3_perm, {
     req(df)
     
     validate(
-      need(input$B >= 1 && input$B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+      need(input$q3_B_1 >= 1 && input$q3_B_1 <= 100000, 
+            "Please enter a number of permutations between 1 and 100,000.")
     )
     
-    B <- input$B
-    group_var <- input$perm_group
+    B <- input$q3_B_1
     
-    dat <- df %>% filter(!is.na(multitask_y_n), !is.na(!!sym(group_var)))
-    g_levels <- levels(factor(dat[[group_var]]))
+    dat <- df %>% filter(!is.na(employment_hours), !is.na(type_2X02))
     
-    if(length(g_levels) < 2) return(NULL)
-    
-    g1 <- g_levels[1]
-    g2 <- g_levels[2]
-    success_level <- if("Yes" %in% levels(dat$multitask_y_n)) "Yes" else levels(dat$multitask_y_n)[1]
-    
-    obs_p1 <- mean(dat$multitask_y_n[dat[[group_var]] == g1] == success_level, na.rm = TRUE)
-    obs_p2 <- mean(dat$multitask_y_n[dat[[group_var]] == g2] == success_level, na.rm = TRUE)
-    obs_diff <- obs_p1 - obs_p2
+    obs_mean_2002 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2002"], na.rm = TRUE)
+    obs_mean_2902 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2902"], na.rm = TRUE)
+    obs_diff <- obs_mean_2002 - obs_mean_2902
     
     diffs <- replicate(B, {
-      shuffled_group <- sample(dat[[group_var]])
-      p1 <- mean(dat$multitask_y_n[shuffled_group == g1] == success_level, na.rm = TRUE)
-      p2 <- mean(dat$multitask_y_n[shuffled_group == g2] == success_level, na.rm = TRUE)
-      p1 - p2
+      shuffled_type <- sample(dat$type_2X02)
+      mean_2002 <- mean(dat$employment_hours[shuffled_type == "DATA2002"], na.rm = TRUE)
+      mean_2902 <- mean(dat$employment_hours[shuffled_type == "DATA2902"], na.rm = TRUE)
+      mean_2002 - mean_2902
     })
     
     pval <- mean(abs(diffs) >= abs(obs_diff))
     
-    list(dist = diffs, obs_diff = obs_diff, pval = pval, success = success_level, group = group_var, g1 = g1, g2 = g2)
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
   }, ignoreNULL = FALSE)
   
   #first tab
   output$q3_perm_summary_1 <- renderPrint({
     req(q3_perm_res())
     res <- q3_perm_res()
+    
+    B <- input$q3_B_1
     
     # Unicode glyphs used in the write-up
     mu   <- "μ"   # μ
@@ -1029,7 +1051,7 @@ server <- function(input, output) {
                               #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
     assumptions <- p(HTML(glue(
-      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples.",
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
@@ -1070,7 +1092,8 @@ server <- function(input, output) {
         tags$div(
           class = "hatpc-step",
           tags$strong("p-value"),
-          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B), ".")),
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B_1), 
+          ", calculated using ", B ," Monte Carlo resamples.")),
           
           
         tags$div(
@@ -1089,7 +1112,7 @@ server <- function(input, output) {
     df_plot <- data.frame(val = res$dist)
     
     ggplot(df_plot, aes(x = val)) +
-      geom_histogram(bins = 30, fill = "#F5A623", color = "white") +
+      geom_histogram(bins = 30, fill = "#404080", color = "white") +
       geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       labs(
@@ -1099,14 +1122,48 @@ server <- function(input, output) {
       ) +
       theme_minimal()
   })
+
+  perm_res <- eventReactive(input$run_perm, {
+    req(df)
+    
+    validate(
+      need(input$q3_B_2 >= 1 && input$q3_B_2 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+    )
+    
+    B <- input$q3_B_2
+    group_var <- input$perm_group
+    
+    dat <- df %>% filter(!is.na(multitask_y_n), !is.na(!!sym(group_var)))
+    g_levels <- levels(factor(dat[[group_var]]))
+    
+    if(length(g_levels) < 2) return(NULL)
+    
+    g1 <- g_levels[1]
+    g2 <- g_levels[2]
+    success_level <- if("Yes" %in% levels(dat$multitask_y_n)) "Yes" else levels(dat$multitask_y_n)[1]
+    
+    obs_p1 <- mean(dat$multitask_y_n[dat[[group_var]] == g1] == success_level, na.rm = TRUE)
+    obs_p2 <- mean(dat$multitask_y_n[dat[[group_var]] == g2] == success_level, na.rm = TRUE)
+    obs_diff <- obs_p1 - obs_p2
+    
+    diffs <- replicate(B, {
+      shuffled_group <- sample(dat[[group_var]])
+      p1 <- mean(dat$multitask_y_n[shuffled_group == g1] == success_level, na.rm = TRUE)
+      p2 <- mean(dat$multitask_y_n[shuffled_group == g2] == success_level, na.rm = TRUE)
+      p1 - p2
+    })
+    
+    pval <- mean(abs(diffs) >= abs(obs_diff))
+    
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, success = success_level, group = group_var, g1 = g1, g2 = g2)
+  }, ignoreNULL = FALSE)
   
   #second tab
   output$q3_perm_summary_2 <- renderPrint({
     req(perm_res())
     res <- perm_res()
     
-    B <- input$B
-    
+    B <- input$q3_B_2
     
     # Unicode glyphs used in the write-up
     mu   <- "μ"   # μ
@@ -1122,7 +1179,7 @@ server <- function(input, output) {
     
 
     assumptions <- p(HTML(glue(
-      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples.",
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
@@ -1160,12 +1217,11 @@ server <- function(input, output) {
           p(test_statistic)
         ),
         
-        #HEY NOTE TO WHO'S READING THIS: how do i make B change every time
         tags$div(
           class = "hatpc-step",
           tags$strong("p-value"),
-          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B), ", 
-                   calculated using, ", input$q3_B ," Monte Carlo resamples.")),
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B_2), ", 
+                   calculated using ", B ," Monte Carlo resamples.")),
           
           
           tags$div(
@@ -1183,7 +1239,7 @@ server <- function(input, output) {
     df_plot <- data.frame(val = res$dist)
     
     ggplot(df_plot, aes(x = val)) +
-      geom_histogram(bins = 30, fill = "#4A90E2", color = "white") +
+      geom_histogram(bins = 30, fill = "#69b3a2", color = "white") +
       geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       labs(
@@ -1193,34 +1249,6 @@ server <- function(input, output) {
       ) +
       theme_minimal()
   })
-  
-  q3_perm_res <- eventReactive(input$run_q3_perm, {
-    req(df)
-    
-    validate(
-      need(input$q3_B >= 1 && input$q3_B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
-    )
-    
-    B <- input$q3_B
-    
-    dat <- df %>% filter(!is.na(employment_hours), !is.na(type_2X02))
-    
-    obs_mean_2002 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2002"], na.rm = TRUE)
-    obs_mean_2902 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2902"], na.rm = TRUE)
-    obs_diff <- obs_mean_2002 - obs_mean_2902
-    
-    diffs <- replicate(B, {
-      shuffled_type <- sample(dat$type_2X02)
-      mean_2002 <- mean(dat$employment_hours[shuffled_type == "DATA2002"], na.rm = TRUE)
-      mean_2902 <- mean(dat$employment_hours[shuffled_type == "DATA2902"], na.rm = TRUE)
-      mean_2002 - mean_2902
-    })
-    
-    pval <- mean(abs(diffs) >= abs(obs_diff))
-    
-    list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
-  }, ignoreNULL = FALSE)
-
   
   #-------------------------------
   # QUESTION 1
