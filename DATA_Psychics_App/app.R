@@ -770,7 +770,7 @@ ui <- fluidPage(
           value = "appendix",
           
           h4("AI Usage Statement"),
-          p("No/ALL (like every single one) artificial intelligence tools were used in the completion of this project."),
+          p("TASKIN - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
           
           h4("ISI Professional Ethics Statement"),
           p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
