@@ -401,6 +401,10 @@ ui <- fluidPage(
           
           h2("Research Motivation"),
           p("Graphs go in here, possibly interactive as well"),
+          p("The dataset was collected through a voluntary survey of students enrolled in the University of Sydney's DATA2002 and DATA2902 units.
+            Students completed the survey during allocated workshop hours, which helped maximise participation and to gather a more accurate representation of the population."),
+        
+          p("After collection, the data was cleaned and deidentified before being released to the DATA2X02 cohort, allowing students to use it for group analysis and to formulate and investigate their own research questions."),
           p(
             "The question we would like to answer is whether ",
             "there may exist significant challenges that students ",
