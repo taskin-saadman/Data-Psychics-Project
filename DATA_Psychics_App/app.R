@@ -429,7 +429,20 @@ ui <- fluidPage(
           ),
           
           h2("Data Description"),
-          p("Basic description of data, justification on whether it's a random sample...etc."),
+          p("Once cleaned, the dataset contains 673 responses across 23 variables, which can be categorised into 3 groups:
+            **1. Demographic and Lifestyle**
+            Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week),
+            hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, and favourite music genre.
+            
+            **2. Academic Background and Study Behaviour**
+            Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902,
+            typical approach to assessments (e.g. gradual, cram, immediately), and commute time to campus.
+            
+            **3. Weekly learning choices**
+            Which learning pathway and revision lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice.
+            Also included is whether the student multi-tasks during lectures, what tasks they do, and why.
+            "),
+          p("random sample"),
           
           h2("Limitations and Biases"),
           
