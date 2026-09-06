@@ -676,8 +676,14 @@ ui <- fluidPage(
               
               p("If a numerical variable is chosen, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
                 If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
-                For ordinal data, the Wilcoxon Rank-Sum test is conducted.")
+                For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
               
+              h5("Note"),
+              p("Do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
+                numerical variable, or \"Employment Status (y/n)\" as grouping variable and
+                \"Employment Hours (hours)\" as numerical variable. This is because the \"no\" group for
+                both grouping variables correspond to a numerical value of zero in the corresponding
+                numerical variable.")
             ),
             
             #second tabset
@@ -685,7 +691,32 @@ ui <- fluidPage(
               title = "Assumption Checking",
               value = "assumptions_q2",
               
-              uiOutput("out2_assumptions")
+              conditionalPanel(
+                condition = "input.yvar_type == 'Numerical'",
+                
+                h4("Q-Q Plot: Visual check for normality"),
+                p("The Q-Q plots below serve as a visual check if the data is normally distributed."),
+                plotOutput("q2_qqplot"),
+                
+                h4("Violin and box plots: Visual check for distribution and spread"),
+                p("The violin and box plots show the shape of each group's distribution, as well as
+                  the median, interquartile range and outliers. Comparing the widths of the two
+                  violins gives a visual check of the equal variance assumption."),
+                plotOutput("q2_violin_box"),
+                
+                h4("Levene's test of equal variance"),
+                p("Levene's test gives a numerical value to the equality of variances between two
+                  groups. It can be assumed that the variance of one group is independent to that
+                  of the other group."),
+                verbatimTextOutput("q2_levene")
+              ),
+              
+              conditionalPanel(
+                condition = "input.yvar_type == 'Ordinal'",
+                
+                p(tags$em("The Q-Q and violin/boxplot diagnostics are shown for numerical variables only.
+                          The Wilcoxon Rank-Sum test used for ordinal variables does not assume normality."))
+              )
             ),
             
             #third tabset
@@ -763,7 +794,8 @@ ui <- fluidPage(
           value = "appendix",
           
           h4("AI Usage Statement"),
-          p("TASKIN - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
+          p("Taskin - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
+          p("Felix - I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts."),
           
           h4("ISI Professional Ethics Statement"),
           p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
@@ -809,12 +841,75 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 2 - ASSUMPTIONS
   # -------------------------------------------------------  
-  output$out2_assumptions <- renderUI({
-    tags$div(
-      class = "hatpc-step",
-      tags$strong("Conclusion"),
-      p("HI THERE"))
+  q2_plot_data <- reactive({
+    req(input$yvar_type == "Numerical")
+    
+    xvar <- q2_xvar()
+    yvar <- input$drop2_yvar_num
+    
+    d <- df[, c(xvar, yvar)]
+    names(d) <- c("group", "value")
+    
+    d <- d[!is.na(d$group) & !is.na(d$value), ]
+    d$group <- factor(d$group)
+    
+    validate(
+      need(nrow(d) > 0, "No complete observations for the selected variables.")
+    )
+    
+    d
   })
+  
+  #display labels for the axes/titles of the assumption plots
+  q2_plot_labels <- reactive({
+    list(
+      group = names(nominal_choices)[nominal_choices == q2_xvar()],
+      value = names(numeric_choices)[numeric_choices == input$drop2_yvar_num]
+    )
+  })
+  
+  output$q2_qqplot <- renderPlot({
+    d <- q2_plot_data()
+    labs_q2 <- q2_plot_labels()
+    
+    ggplot(d, aes(sample = value, colour = group)) +
+      stat_qq() +
+      stat_qq_line(colour = "black") +
+      scale_colour_manual(values = c("#69b3a2", "#404080")) +
+      facet_wrap(~ group) +
+      labs(
+        title = paste0("Normal Q-Q Plots of ", labs_q2$value, " by ", labs_q2$group),
+        x = "Theoretical Quantiles",
+        y = paste0("Sample Quantiles: ", labs_q2$value),
+        colour = labs_q2$group
+      ) +
+      theme_minimal() +
+      theme(legend.position = "none")
+  })
+  
+  output$q2_levene <- renderPrint({
+    d <- q2_plot_data()
+    
+    levene_test(d, value ~ group)
+  })
+  
+  output$q2_violin_box <- renderPlot({
+    d <- q2_plot_data()
+    labs_q2 <- q2_plot_labels()
+    
+    ggplot(d, aes(x = group, y = value, fill = group)) +
+      geom_violin(width = 1.0, colour = "#e9ecef") +
+      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", alpha = 0.9, outlier.size = 1) +
+      scale_fill_manual(values = c("#69b3a2", "#404080")) +
+      labs(
+        title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
+        x = labs_q2$group,
+        y = labs_q2$value
+      ) +
+      theme_minimal() +
+      theme(legend.position = "none")
+  })
+  
   
   # -------------------------------------------------------
   # QUESTION 2 - TWO SAMPLE T-TEST
@@ -840,6 +935,24 @@ server <- function(input, output) {
     neq  <- "≠"   # ≠
     sim  <- "∼"   # ∼
     dots <- "…"   # …
+    alp  <- "α"   # α
+    
+    # Subscripted sample observations used in the assumptions
+    X1  <- "X<sub>1</sub>"
+    X2  <- "X<sub>2</sub>"
+    Xi  <- "X<sub>i</sub>"
+    Xnx <- "X<sub>n<sub>X</sub></sub>"
+    Y1  <- "Y<sub>1</sub>"
+    Y2  <- "Y<sub>2</sub>"
+    Yi  <- "Y<sub>i</sub>"
+    Yny <- "Y<sub>n<sub>Y</sub></sub>"
+    
+    # Distribution parameters used in the assumptions
+    muX  <- glue("{mu}<sub>X</sub>")
+    muY  <- glue("{mu}<sub>Y</sub>")
+    sig2 <- glue("{sig}<sup>2</sup>")
+    nX   <- "n<sub>X</sub>"
+    nY   <- "n<sub>Y</sub>"
     
     hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
                               H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
@@ -891,9 +1004,9 @@ server <- function(input, output) {
       if (test_type == "student") {
         
         indep_clause <- if (reject) {
-          "Xi and Yi are independent and have equal variance."
+          glue("{Xi} and {Yi} are independent and have equal variance.")
         } else {
-          "Xi and Yi are independent."
+          glue("{Xi} and {Yi} are independent.")
         }
         
         variance_clause <- glue(
@@ -903,7 +1016,7 @@ server <- function(input, output) {
         
       } else {
         
-        indep_clause <- "Xi and Yi are independent and have equal variance."
+        indep_clause <- glue("{Xi} and {Yi} are independent and have equal variance.")
         
         variance_clause <- glue(
           "Using Levene's test, as {lev} is less than 0.05, X and Y have different ",
@@ -912,9 +1025,9 @@ server <- function(input, output) {
       }
       
       assumptions <- glue(
-        "X1, {dots} , Xnx are independent and identically distributed with the ",
-        "distribution N ({mu}X, {sig}2), Y1, {dots} , Yny are independent and ",
-        "identically distributed with the distribution N ({mu}Y , {sig}2), and ",
+        "{X1}, {X2}, {dots} , {Xnx} are independent and identically distributed with the ",
+        "distribution N ({muX}, {sig2}), {Y1}, {Y2}, {dots} , {Yny} are independent and ",
+        "identically distributed with the distribution N ({muY}, {sig2}), and ",
         "{indep_clause} {variance_clause}"
       )
       
@@ -948,12 +1061,12 @@ server <- function(input, output) {
       
       reject <- wt$p.value < alpha
       
-      assumptions <- "Xi and Yi are independent and follow the same distribution but differ by a shift."
+      assumptions <- glue("{Xi} and {Yi} are independent and follow the same distribution but differ by a shift.")
       
-      test_statistic <- glue(
-        "Under H₀,  W follows the WRS(nX, nY ) distribution. ",
+      test_statistic <- p(HTML(glue(
+        "Under H₀,  W follows the WRS({nX}, {nY}) distribution. ",
         "The test statistic is {stat}."
-      )
+      )))
       
       conclusion <- if (reject) {
         "Since the p-value < 0.05, we reject H₀."
@@ -970,7 +1083,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Significance level"),
-        p("alpha = 0.05")
+        p(paste0(alp, " = ", alpha))
       ),
       
       tags$div(
@@ -983,7 +1096,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Assumptions"),
-        p(assumptions)
+        p(HTML(assumptions))
       ),
       
       tags$div(
