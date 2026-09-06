@@ -403,11 +403,6 @@ ui <- fluidPage(
           value = "intro",
           
           h2("Research Motivation"),
-          p("Graphs go in here, possibly interactive as well"),
-          p("The dataset was collected through a voluntary survey of students enrolled in the University of Sydney's DATA2002 and DATA2902 units.
-            Students completed the survey during allocated workshop hours, which helped maximise participation and to gather a more accurate representation of the population."),
-          
-          p("After collection, the data was cleaned and deidentified before being released to the DATA2X02 cohort, allowing students to use it for group analysis and to formulate and investigate their own research questions."),
           p(
             "The question we would like to answer is whether ",
             "there may exist significant challenges that students ",
@@ -421,19 +416,32 @@ ui <- fluidPage(
           ),
           
           h2("Data Description"),
-          p("Once cleaned, the dataset contains 673 responses across 23 variables, which can be categorised into 3 groups:
-            **1. Demographic and Lifestyle**
-            Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week),
-            hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, and favourite music genre.
-            
-            **2. Academic Background and Study Behaviour**
-            Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902,
-            typical approach to assessments (e.g. gradual, cram, immediately), and commute time to campus.
-            
-            **3. Weekly learning choices**
-            Which learning pathway and revision lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice.
-            Also included is whether the student multi-tasks during lectures, what tasks they do, and why.
-            "),
+          p("The dataset was collected through a voluntary survey of students enrolled in the University of Sydney's DATA2002 and DATA2902 units.
+            Students completed the survey during allocated workshop hours, which helped maximise participation and to gather a more accurate representation of the population."),
+          p("Once cleaned and deidentified, the dataset contains 673 responses across 23 variables, which can be categorised into 3 groups:"),
+          tags$ol(
+            tags$li(
+              tags$strong("Demographic and Lifestyle: "),
+              tags$br(),
+              tags$br(),
+              "Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week), hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, and favourite music genre."
+            ),
+            tags$br(),
+            tags$li(
+              tags$strong("Academic Background and Study Behaviour: "),
+              tags$br(),
+              tags$br(),
+              "Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902, typical approach to assessments (e.g. gradual, cram, immediately), and commute time to campus."
+            ),
+            tags$br(),
+            tags$li(
+              tags$strong("Weekly learning choices: "),
+              tags$br(),
+              tags$br(),
+              "Which learning pathway and revision lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice. Also included is whether the student multi-tasks during lectures, what tasks they do, and why."
+            )
+          ),
+          tags$br(),
           p("random sample"),
           
           h2("Limitations and Biases"),
@@ -805,7 +813,7 @@ ui <- fluidPage(
           h4("AI Usage Statement"),
           p("Taskin - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
           p("Felix - I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts."),
-          p("Nadh - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it.")
+          p("Nadh - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it."),
           
           h4("ISI Professional Ethics Statement"),
           p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
