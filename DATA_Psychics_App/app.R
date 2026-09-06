@@ -1258,8 +1258,8 @@ server <- function(input, output) {
     test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
     
     conclusion <- if (res$pval < 0.05) 
-    {(paste0("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean ", grade_label, " grade between renters and non-renters.\n"))} 
-    else {(paste0("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean ", grade_label, " grade between renters and non-renters.\n"))}
+    {(paste0("At α = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean ", grade_label, " grade between renters and non-renters.\n"))} 
+    else {(paste0("At α = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean ", grade_label, " grade between renters and non-renters.\n"))}
     
     tags$div(
       class = "hatpc-panel",
@@ -1267,7 +1267,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Significance level"),
-        p("alpha = 0.05")
+        p("α = 0.05")
       ),
       
       tags$div(
@@ -1400,8 +1400,8 @@ server <- function(input, output) {
     test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
     
     conclusion <- if (res$pval < 0.05) 
-    {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean sleep hours between the cohorts.\n")} 
-    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean sleep hours between the cohorts.\n")}
+    {("At α = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean sleep hours between the cohorts.\n")} 
+    else {("At α = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean sleep hours between the cohorts.\n")}
     
     tags$div(
       class = "hatpc-panel",
@@ -1409,7 +1409,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Significance level"),
-        p("alpha = 0.05")
+        p("α = 0.05")
       ),
       
       tags$div(
@@ -1770,13 +1770,13 @@ server <- function(input, output) {
     
     conclusion_line <- if (p_value < 0.05) {
       paste0(
-        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
+        "Conclusion: At α = 0.05, we reject the null hypothesis. ",
         "There is statistically significant evidence of an association between ",
         input$q1_ind_x, " and ", input$q1_ind_y, "."
       )
     } else {
       paste0(
-        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
+        "Conclusion: At α = 0.05, we fail to reject the null hypothesis. ",
         "There is insufficient evidence of an association between ",
         input$q1_ind_x, " and ", input$q1_ind_y, "."
       )
@@ -1966,13 +1966,13 @@ server <- function(input, output) {
     
     conclusion_line <- if (p_value < 0.05) {
       paste0(
-        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
+        "Conclusion: At α = 0.05, we reject the null hypothesis. ",
         "There is statistically significant evidence that the distribution of paid employment status ",
         "is not homogeneous across DATA2002 and DATA2902 students."
       )
     } else {
       paste0(
-        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
+        "Conclusion: At α = 0.05, we fail to reject the null hypothesis. ",
         "There is insufficient evidence that the distribution of paid employment status ",
         "differs between DATA2002 and DATA2902 students."
       )
@@ -2233,12 +2233,12 @@ server <- function(input, output) {
     
     conclusion_line <- if (p_value < 0.05) {
       paste0(
-        "Conclusion: At alpha = 0.05, we reject the null hypothesis. There is statistically significant evidence of an ",
+        "Conclusion: At α = 0.05, we reject the null hypothesis. There is statistically significant evidence of an ",
         "association between course enrolment and paid employment status even after controlling for Domestic/International student status."
       )
     } else {
       paste0(
-        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. After controlling for Domestic/International student status, ",
+        "Conclusion: At α = 0.05, we fail to reject the null hypothesis. After controlling for Domestic/International student status, ",
         "there is insufficient evidence of an association between course enrolment and paid employment status."
       )
     }
