@@ -351,39 +351,10 @@ ui <- fluidPage(
         condition = "input.selected_tab == 'question3'",
         
         conditionalPanel(
-          condition = "input.q3_tab == 'q3_perm_employment'",
+          condition = "input.q3_tab == 'q3_perm_data1x01'",
           
           h4("Monte Carlo simulation Options"),
-          p("Permutation test for the difference in mean weekly working hours between DATA2002 and DATA2902 students."),
-          
-          numericInput(
-            inputId = "q3_B_1",
-            label = "Permutations:",
-            value = 1000,
-            min = 1,
-            max = 100000
-          ),
-          
-          actionButton(
-            inputId = "run_q3_perm",
-            label = "Run Permutation Test",
-            class = "btn-primary"
-          )
-        ),
-        
-        conditionalPanel(
-          condition = "input.q3_tab == 'q3_perm_multitask'",
-          
-          h4("Monte Carlo simulation Options"),
-          
-          selectInput(
-            inputId = "perm_group",
-            label = "Compare Multitasking By:",
-            choices = c(
-              "Employment Status (working/not working)" = "employment_y_n",
-              "Rent Status (rent/no rent)" = "rent_y_n"
-            )
-          ),
+          p("Permutation test for the difference in mean DATA1X01 grade between students who pay rent and those who do not."),
           
           numericInput(
             inputId = "q3_B_2",
@@ -394,7 +365,28 @@ ui <- fluidPage(
           ),
           
           actionButton(
-            inputId = "run_perm",
+            inputId = "run_perm_1x01",
+            label = "Run Permutation Test",
+            class = "btn-primary"
+          )
+        ),
+        
+        conditionalPanel(
+          condition = "input.q3_tab == 'q3_perm_data2x02'",
+          
+          h4("Monte Carlo simulation Options"),
+          p("Permutation test for the difference in mean DATA2X02 grade between students who pay rent and those who do not."),
+          
+          numericInput(
+            inputId = "q3_B_3",
+            label = "Permutations:",
+            value = 1000,
+            min = 1,
+            max = 100000
+          ),
+          
+          actionButton(
+            inputId = "run_perm_2x02",
             label = "Run Permutation Test",
             class = "btn-primary"
           )
@@ -414,7 +406,7 @@ ui <- fluidPage(
           p("Graphs go in here, possibly interactive as well"),
           p("The dataset was collected through a voluntary survey of students enrolled in the University of Sydney's DATA2002 and DATA2902 units.
             Students completed the survey during allocated workshop hours, which helped maximise participation and to gather a more accurate representation of the population."),
-        
+          
           p("After collection, the data was cleaned and deidentified before being released to the DATA2X02 cohort, allowing students to use it for group analysis and to formulate and investigate their own research questions."),
           p(
             "The question we would like to answer is whether ",
@@ -721,7 +713,7 @@ ui <- fluidPage(
               value = "intro_q3",
               
               h4("Research Question"),
-              p("Is there a difference in the means of student's mean weekly working hours between DATA2002 and DATA2902 students using Monte Carlo simulation?"),
+              p("Is there a difference in mean DATA1X01 grade, and separately in mean DATA2X02 grade, between students who pay rent and those who do not, using Monte Carlo simulation?"),
               
               p("To evaluate the research question based on the selected variables, 
                 our program detects which two sample test is most suitable following the assumptions:"),
@@ -735,32 +727,33 @@ ui <- fluidPage(
             ),
             
             tabPanel(
-              title = "Employment Hours",
-              value = "q3_perm_employment",
+              title = "DATA1X01 Grade",
+              value = "q3_perm_data1x01",
               
-              h4("Permutation Test: Employment Hours Difference"),
+              h4("Permutation Test: DATA1X01 Grade by Rental Status"),
               p(
-                "We use a Monte Carlo simulation test to evaluate if the difference in ",
-                "mean weekly employment hours between DATA2002 and DATA2902 students is statistically significant."
+                "We use a Monte Carlo simulation test to determine if mean ",
+                "DATA1X01 grade differs significantly between students ",
+                "who pay rent and those who do not."
               ),
               
-              plotOutput("q3_perm_plot_1"),
-              #verbatimTextOutput("q3_perm_summary_1"),
-              uiOutput("q3_perm_summary_1")
+              plotOutput("q3_perm_plot_1x01"),
+              uiOutput("q3_perm_summary_1x01")
             ),
             
             tabPanel(
-              title = "Multitasking",
-              value = "q3_perm_multitask",
+              title = "DATA2X02 Grade",
+              value = "q3_perm_data2x02",
               
-              h4("Permutation Test: Multitasking Proportion Shifts"),
+              h4("Permutation Test: DATA2X02 Grade by Rental Status"),
               p(
-                "We use a Monte Carlo simulation test to determine if the proportion of ",
-                "students who multitask shifts significantly based on employment or rent status."
+                "We use a Monte Carlo simulation test to determine if mean ",
+                "DATA2X02 grade differs significantly between students ",
+                "who pay rent and those who do not."
               ),
               
-              plotOutput("q3_perm_plot_2"),
-              uiOutput("q3_perm_summary_2")
+              plotOutput("q3_perm_plot_2x02"),
+              uiOutput("q3_perm_summary_2x02")
             )
           )
         ),
@@ -804,7 +797,7 @@ server <- function(input, output) {
     
     #identify which raw name was selected based on the active radio button
     raw_val <- q2_yvar()
-
+    
     #combine lists to map backend name back to its display label
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
@@ -829,12 +822,12 @@ server <- function(input, output) {
   output$out2_graph <- renderPlot({
     xvar <- q2_xvar()
     yvar <- q2_yvar()
-  
-   df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
-     (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
-      else geom_bar(color="#e9ecef", position = 'identity')) +
-     scale_fill_manual(values=c("#69b3a2", "#404080")) +
-     labs(fill="") + facet_wrap(~.data[[xvar]])
+    
+    df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
+      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
+       else geom_bar(color="#e9ecef", position = 'identity')) +
+      scale_fill_manual(values=c("#69b3a2", "#404080")) +
+      labs(fill="") + facet_wrap(~.data[[xvar]])
   })
   
   output$out2_test <- renderUI({
@@ -1014,169 +1007,36 @@ server <- function(input, output) {
   })
   
   # -------------------------------------------------------
-  # QUESTION 3 - RESAMPLING MONTE CARLO
+  # QUESTION 3 - RENTAL STATUS vs DATA1X01/DATA2X02 GRADES
   # -------------------------------------------------------
-  q3_perm_res <- eventReactive(input$run_q3_perm, {
+  run_rent_grade_perm <- function(grade_var, B) {
     req(df)
     
-    validate(
-      need(input$q3_B_1 >= 1 && input$q3_B_1 <= 100000, 
-            "Please enter a number of permutations between 1 and 100,000.")
-    )
-    
-    B <- input$q3_B_1
-    
-    dat <- df %>% filter(!is.na(employment_hours), !is.na(type_2X02))
-    
-    obs_mean_2002 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2002"], na.rm = TRUE)
-    obs_mean_2902 <- mean(dat$employment_hours[dat$type_2X02 == "DATA2902"], na.rm = TRUE)
-    obs_diff <- obs_mean_2002 - obs_mean_2902
-    
-    diffs <- replicate(B, {
-      shuffled_type <- sample(dat$type_2X02)
-      mean_2002 <- mean(dat$employment_hours[shuffled_type == "DATA2002"], na.rm = TRUE)
-      mean_2902 <- mean(dat$employment_hours[shuffled_type == "DATA2902"], na.rm = TRUE)
-      mean_2002 - mean_2902
-    })
-    
-    pval <- mean(abs(diffs) >= abs(obs_diff))
-    
-    list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
-  }, ignoreNULL = FALSE)
-  
-  #first tab
-  output$q3_perm_summary_1 <- renderPrint({
-    req(q3_perm_res())
-    res <- q3_perm_res()
-    
-    B <- input$q3_B_1
-    
-    # Unicode glyphs used in the write-up
-    mu   <- "μ"   # μ
-    sig  <- "σ"   # σ
-    neq  <- "≠"   # ≠
-    sim  <- "∼"   # ∼
-    dots <- "…"   # …
-    
-    p("Monte Carlo simulation Test for difference in mean weekly employment hours\n")
-    
-    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
-    
-    assumptions <- p(HTML(glue(
-      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
-      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
-      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
-    
-    test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
-    
-    conclusion <- if (res$pval < 0.05) 
-      {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")} 
-    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")}
-    
-    tags$div(
-      class = "hatpc-panel",
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Significance level"),
-        p("alpha = 0.05")
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Hypothesis"),
-        p(paste0("Let x: DATA2002 group and y: DATA2X02 group."),
-        p(hypothesis)
-        ),
-        
-        tags$div(
-          class = "hatpc-step",
-          tags$strong("Assumptions"),
-          p(assumptions)
-        ),
-        
-        tags$div(
-          class = "hatpc-step",
-          tags$strong("Test-statistic"),
-          p(test_statistic)
-        ),
-        
-        tags$div(
-          class = "hatpc-step",
-          tags$strong("p-value"),
-          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B_1), 
-          ", calculated using ", B ," Monte Carlo resamples.")),
-          
-          
-        tags$div(
-          class = "hatpc-step",
-          tags$strong("Conclusion"),
-          p(conclusion))
-        )
-      )
-    )
-  })
-  
-  output$q3_perm_plot_1 <- renderPlot({
-    req(q3_perm_res())
-    res <- q3_perm_res()
-    
-    df_plot <- data.frame(val = res$dist)
-    
-    ggplot(df_plot, aes(x = val)) +
-      geom_histogram(bins = 30, fill = "#404080", color = "white") +
-      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
-      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
-      labs(
-        title = "Null Distribution of Difference in Mean Employment Hours\n(DATA2002 - DATA2902)",
-        x = "Simulated Difference Under Null Hypothesis",
-        y = "Frequency"
-      ) +
-      theme_minimal()
-  })
-
-  perm_res <- eventReactive(input$run_perm, {
-    req(df)
-    
-    validate(
-      need(input$q3_B_2 >= 1 && input$q3_B_2 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
-    )
-    
-    B <- input$q3_B_2
-    group_var <- input$perm_group
-    
-    dat <- df %>% filter(!is.na(multitask_y_n), !is.na(!!sym(group_var)))
-    g_levels <- levels(factor(dat[[group_var]]))
+    dat <- df %>% filter(!is.na(.data[[grade_var]]), !is.na(rent_y_n))
+    g_levels <- levels(factor(dat$rent_y_n))
     
     if(length(g_levels) < 2) return(NULL)
     
     g1 <- g_levels[1]
     g2 <- g_levels[2]
-    success_level <- if("Yes" %in% levels(dat$multitask_y_n)) "Yes" else levels(dat$multitask_y_n)[1]
     
-    obs_p1 <- mean(dat$multitask_y_n[dat[[group_var]] == g1] == success_level, na.rm = TRUE)
-    obs_p2 <- mean(dat$multitask_y_n[dat[[group_var]] == g2] == success_level, na.rm = TRUE)
-    obs_diff <- obs_p1 - obs_p2
+    obs_mean1 <- mean(dat[[grade_var]][dat$rent_y_n == g1], na.rm = TRUE)
+    obs_mean2 <- mean(dat[[grade_var]][dat$rent_y_n == g2], na.rm = TRUE)
+    obs_diff <- obs_mean1 - obs_mean2
     
     diffs <- replicate(B, {
-      shuffled_group <- sample(dat[[group_var]])
-      p1 <- mean(dat$multitask_y_n[shuffled_group == g1] == success_level, na.rm = TRUE)
-      p2 <- mean(dat$multitask_y_n[shuffled_group == g2] == success_level, na.rm = TRUE)
-      p1 - p2
+      shuffled_group <- sample(dat$rent_y_n)
+      m1 <- mean(dat[[grade_var]][shuffled_group == g1], na.rm = TRUE)
+      m2 <- mean(dat[[grade_var]][shuffled_group == g2], na.rm = TRUE)
+      m1 - m2
     })
     
     pval <- mean(abs(diffs) >= abs(obs_diff))
     
-    list(dist = diffs, obs_diff = obs_diff, pval = pval, success = success_level, group = group_var, g1 = g1, g2 = g2)
-  }, ignoreNULL = FALSE)
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, grade_var = grade_var, g1 = g1, g2 = g2)
+  }
   
-  #second tab
-  output$q3_perm_summary_2 <- renderPrint({
-    req(perm_res())
-    res <- perm_res()
-    
-    B <- input$q3_B_2
+  render_rent_grade_summary <- function(res, grade_label, B) {
     
     # Unicode glyphs used in the write-up
     mu   <- "μ"   # μ
@@ -1185,12 +1045,9 @@ server <- function(input, output) {
     sim  <- "∼"   # ∼
     dots <- "…"   # …
     
-    p("Monte Carlo simulation Test for difference in mean weekly employment hours\n")
-    
     hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
                               #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
-
     assumptions <- p(HTML(glue(
       "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
@@ -1199,8 +1056,8 @@ server <- function(input, output) {
     test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
     
     conclusion <- if (res$pval < 0.05) 
-    {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in working hours between the cohorts.\n")} 
-    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in working hours between the cohorts.\n")}
+    {(paste0("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean ", grade_label, " grade between renters and non-renters.\n"))} 
+    else {(paste0("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean ", grade_label, " grade between renters and non-renters.\n"))}
     
     tags$div(
       class = "hatpc-panel",
@@ -1214,7 +1071,7 @@ server <- function(input, output) {
       tags$div(
         class = "hatpc-step",
         tags$strong("Hypothesis"),
-        p(paste0("Let x: ", res$g1, " group and y: ", res$g2, " group."),
+        p(paste0("Let x: rent = ", res$g1, " group and y: rent = ", res$g2, " group."),
           p(hypothesis)
         ),
         
@@ -1233,7 +1090,7 @@ server <- function(input, output) {
         tags$div(
           class = "hatpc-step",
           tags$strong("p-value"),
-          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B_2), ", 
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/B), ", 
                    calculated using ", B ," Monte Carlo resamples.")),
           
           
@@ -1244,11 +1101,9 @@ server <- function(input, output) {
         )
       )
     )
-  })
+  }
   
-  output$q3_perm_plot_2 <- renderPlot({
-    req(perm_res())
-    res <- perm_res()
+  render_rent_grade_plot <- function(res, grade_label) {
     df_plot <- data.frame(val = res$dist)
     
     ggplot(df_plot, aes(x = val)) +
@@ -1256,12 +1111,55 @@ server <- function(input, output) {
       geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       labs(
-        title = paste("Null Distribution of Difference in Proportions\n(", res$g1, " vs ", res$g2, ")", sep=""),
+        title = paste0("Null Distribution of Difference in Mean ", grade_label, " Grade\n(Rent: ", res$g1, " vs ", res$g2, ")"),
         x = "Simulated Difference Under Null Hypothesis",
         y = "Frequency"
       ) +
       theme_minimal()
+  }
+  
+  #-------------------------
+  # DATA1X01 tab
+  #-------------------------
+  perm_res_1x01 <- eventReactive(input$run_perm_1x01, {
+    validate(
+      need(input$q3_B_2 >= 1 && input$q3_B_2 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+    )
+    
+    run_rent_grade_perm("grade_1X01", input$q3_B_2)
+  }, ignoreNULL = FALSE)
+  
+  output$q3_perm_summary_1x01 <- renderUI({
+    req(perm_res_1x01())
+    render_rent_grade_summary(perm_res_1x01(), "DATA1X01", input$q3_B_2)
   })
+  
+  output$q3_perm_plot_1x01 <- renderPlot({
+    req(perm_res_1x01())
+    render_rent_grade_plot(perm_res_1x01(), "DATA1X01")
+  })
+  
+  #-------------------------
+  # DATA2X02 tab
+  #-------------------------
+  perm_res_2x02 <- eventReactive(input$run_perm_2x02, {
+    validate(
+      need(input$q3_B_3 >= 1 && input$q3_B_3 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+    )
+    
+    run_rent_grade_perm("grade_2X02", input$q3_B_3)
+  }, ignoreNULL = FALSE)
+  
+  output$q3_perm_summary_2x02 <- renderUI({
+    req(perm_res_2x02())
+    render_rent_grade_summary(perm_res_2x02(), "DATA2X02", input$q3_B_3)
+  })
+  
+  output$q3_perm_plot_2x02 <- renderPlot({
+    req(perm_res_2x02())
+    render_rent_grade_plot(perm_res_2x02(), "DATA2X02")
+  })
+  
   
   #-------------------------------
   # QUESTION 1
@@ -2215,4 +2113,3 @@ shinyApp(
   ui = ui,
   server = server
 )
-
