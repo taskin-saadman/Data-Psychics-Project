@@ -102,6 +102,20 @@ hatpc_panel <- function(
   )
 }
 
+# General-purpose helper: wraps plain / captured console-style text output
+# inside the animated hatpc-panel / hatpc-step card so that every test
+# result across the app shares the same HATPC visual treatment.
+hatpc_text_output <- function(title, text) {
+  tags$div(
+    class = "hatpc-panel",
+    tags$div(
+      class = "hatpc-step",
+      tags$strong(title),
+      tags$pre(text)
+    )
+  )
+}
+
 ui <- fluidPage(
   
   tags$head(
@@ -351,13 +365,19 @@ ui <- fluidPage(
         condition = "input.selected_tab == 'question3'",
         
         conditionalPanel(
-          condition = "input.q3_tab == 'q3_perm_data1x01'",
+          condition = "input.q3_tab == 'q3_perm_rent'",
           
           h4("Monte Carlo simulation Options"),
-          p("Permutation test for the difference in mean DATA1X01 grade between students who pay rent and those who do not."),
+          p("Permutation test for the difference in mean grade between students who pay rent and those who do not."),
+          
+          selectInput(
+            inputId = "q3_grade_choice",
+            label = "Grade Variable:",
+            choices = c("DATA1X01" = "grade_1X01", "DATA2X02" = "grade_2X02")
+          ),
           
           numericInput(
-            inputId = "q3_B_2",
+            inputId = "q3_B_rent",
             label = "Permutations:",
             value = 1000,
             min = 1,
@@ -365,20 +385,20 @@ ui <- fluidPage(
           ),
           
           actionButton(
-            inputId = "run_perm_1x01",
+            inputId = "run_perm_rent",
             label = "Run Permutation Test",
             class = "btn-primary"
           )
         ),
         
         conditionalPanel(
-          condition = "input.q3_tab == 'q3_perm_data2x02'",
+          condition = "input.q3_tab == 'q3_perm_sleep'",
           
           h4("Monte Carlo simulation Options"),
-          p("Permutation test for the difference in mean DATA2X02 grade between students who pay rent and those who do not."),
+          p("Permutation test for the difference in mean weekly sleep hours between DATA2002 and DATA2902 students."),
           
           numericInput(
-            inputId = "q3_B_3",
+            inputId = "q3_B",
             label = "Permutations:",
             value = 1000,
             min = 1,
@@ -386,7 +406,7 @@ ui <- fluidPage(
           ),
           
           actionButton(
-            inputId = "run_perm_2x02",
+            inputId = "run_perm_sleep",
             label = "Run Permutation Test",
             class = "btn-primary"
           )
@@ -404,11 +424,15 @@ ui <- fluidPage(
           
           h2("Research Motivation"),
           p(
-            "As university students, we feel the pressure of needing to balance our univeristy life with our personal life. Factors like having a part-time job,
-            long commute, or not getting enough sleep each night can add pressure and affect academic performance."),
-            tags$br(),
-          p("We created this app to investigate how different academic and lifestyle factors are associated with academic performance. By performing relevant 
-            statistical tests, our findings may assist the University of Sydney to move toward earlier, more targeted support for students who may be struggling."
+            "The question we would like to answer is whether ",
+            "there may exist significant challenges that students ",
+            "face in their studies. This includes employment, travel, ",
+            "or gaps in study skills. Through performing relevant ",
+            "statistical tests on selected variables, relationships ",
+            "between these possible challenges and a student's grades ",
+            "may surface. By identifying these challenges, the ",
+            "university may be able to provide earlier, more efficient ",
+            "and targeted assistance to students in need."
           ),
           
           h2("Data Description"),
@@ -438,12 +462,8 @@ ui <- fluidPage(
             )
           ),
           tags$br(),
-          p("This dataset is not a random sample as it more resembles a census style with voluntary non-response. Every student enrolled in DATA2X02 was invited to participate rather than a randomly
-          selected group of university students."),
-          tags$br(),
-          p("The sample also contains a non-response bias as students who chose to complete the survey or attended their designated workshop may have been
-          influenced to respond compared to students who did not attend."),
-          tags$br(),
+          p("random sample"),
+          
           h2("Limitations and Biases"),
           
           h2("Data Processing"),
@@ -559,7 +579,7 @@ ui <- fluidPage(
               
               h4("Test Result"),
               
-              verbatimTextOutput("q1_chi_independence"),
+              uiOutput("q1_chi_independence"),
               
               h4("Chi-square Distribution"),
               
@@ -567,11 +587,11 @@ ui <- fluidPage(
               
               h4("Assumption Check"),
               
-              verbatimTextOutput("q1_ind_assumptions"),
+              uiOutput("q1_ind_assumptions"),
               
               h4("Interpretation"),
               
-              verbatimTextOutput("q1_ind_interpretation")
+              uiOutput("q1_ind_interpretation")
             ),
             
             tabPanel(
@@ -595,7 +615,7 @@ ui <- fluidPage(
               
               h4("Test Result"),
               
-              verbatimTextOutput("q1_chi_homogeneity"),
+              uiOutput("q1_chi_homogeneity"),
               
               h4("Chi-square Distribution"),
               
@@ -603,7 +623,7 @@ ui <- fluidPage(
               
               h4("Interpretation"),
               
-              verbatimTextOutput("q1_hom_interpretation")
+              uiOutput("q1_hom_interpretation")
             ),
             
             tabPanel(
@@ -624,7 +644,7 @@ ui <- fluidPage(
               
               h4("Test Result"),
               
-              verbatimTextOutput("q1_cmh"),
+              uiOutput("q1_cmh"),
               
               h4("Chi-square Distribution"),
               
@@ -632,11 +652,11 @@ ui <- fluidPage(
               
               h4("Adjusted Interpretation"),
               
-              verbatimTextOutput("q1_cmh_interpretation"),
+              uiOutput("q1_cmh_interpretation"),
               
               h4("Unadjusted vs Adjusted Comparison"),
               
-              verbatimTextOutput("q1_cmh_comparison")
+              uiOutput("q1_cmh_comparison")
             )
           )
         ),
@@ -720,7 +740,7 @@ ui <- fluidPage(
                 p("The null hypothesis states that the variances are equal across groups.
                   Hence, a small p-value of less than 0.05 indicates homogeneity of variance across groups, 
                   while a large p-value indicates significantly different variances, so the equal variance assumption is violated."),
-                verbatimTextOutput("q2_levene")
+                uiOutput("q2_levene")
               ),
               
               conditionalPanel(
@@ -756,9 +776,10 @@ ui <- fluidPage(
               value = "intro_q3",
               
               h4("Research Question"),
-              p("Is there a difference in mean DATA1X01 and DATA2X02 grades between 
-                students who pay rent and those who do not, using Monte Carlo simulation?"),
-            
+              p("Are DATA1X01 and DATA2X02 grades associated with rental status, ",
+                "and is there a difference in mean sleep hours between students enrolled ",
+                "in DATA2002 versus DATA2902, using Monte Carlo simulation?"),
+              
               h4("Analysis"),
               p(
                 "This research question involves conducting a Monte Carlo 
@@ -767,41 +788,42 @@ ui <- fluidPage(
                 group labels are shuffled."),
               
               p("In the subsequent tabs, please choose your desired resampling size 
-              for the Monte Carlo simulations. The program will then conduct the 
+              for the Monte Carlo simulations, and (for the rental status tab) which 
+                grade variable to use. The program will then conduct the 
                 simulations and automatically update the results."),
               
               h4("Significance Level"),
               p("All hypothesis tests use a significance level of α = 0.05.")
-              ),
-            
-            tabPanel(
-              title = "DATA1X01 Grade",
-              value = "q3_perm_data1x01",
-              
-              h4("Permutation Test: DATA1X01 Grade by Rental Status"),
-              p(
-                "We use a Monte Carlo permutation test to determine if mean ",
-                "DATA1X01 grade differs significantly between students ",
-                "who pay rent and those who do not."
-              ),
-              
-              plotOutput("q3_perm_plot_1x01"),
-              uiOutput("q3_perm_summary_1x01")
             ),
             
             tabPanel(
-              title = "DATA2X02 Grade",
-              value = "q3_perm_data2x02",
+              title = "Rental Status vs Grade",
+              value = "q3_perm_rent",
               
-              h4("Permutation Test: DATA2X02 Grade by Rental Status"),
+              h4("Permutation Test: Grade by Rental Status"),
               p(
-                "We use a Monte Carlo simulation test to determine if mean ",
-                "DATA2X02 grade differs significantly between students ",
-                "who pay rent and those who do not."
+                "We use a Monte Carlo permutation test to determine if mean ",
+                "grade differs significantly between students who pay rent and ",
+                "those who do not. Use the sidebar dropdown to switch between ",
+                "the DATA1X01 and DATA2X02 grade."
               ),
               
-              plotOutput("q3_perm_plot_2x02"),
-              uiOutput("q3_perm_summary_2x02")
+              plotOutput("q3_perm_plot_rent"),
+              uiOutput("q3_perm_summary_rent")
+            ),
+            
+            tabPanel(
+              title = "Sleep Hours vs Enrolment",
+              value = "q3_perm_sleep",
+              
+              h4("Permutation Test: Sleep Hours by DATA2002/DATA2902 Enrolment"),
+              p(
+                "We use a Monte Carlo permutation test to determine if mean ",
+                "sleep hours differ significantly between DATA2002 and DATA2902 students."
+              ),
+              
+              plotOutput("q3_perm_plot_sleep"),
+              uiOutput("q3_perm_summary_sleep")
             )
           )
         ),
@@ -814,6 +836,7 @@ ui <- fluidPage(
           p("Taskin - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
           p("Felix - I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts."),
           p("Nadh - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it."),
+          p("Tuhin - I used Sonnet 5 by Claude to assist with CSS bugs and Gemini Plus to help with resampling graphs"),
           
           h4("ISI Professional Ethics Statement"),
           p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
@@ -905,10 +928,24 @@ server <- function(input, output) {
       theme(legend.position = "none")
   })
   
-  output$q2_levene <- renderPrint({
+  output$q2_levene <- renderUI({
     d <- q2_plot_data()
     
-    levene_test(d, value ~ group)
+    lt <- levene_test(d, value ~ group)
+    
+    stat <- signif(unname(lt$statistic), 4)
+    df1  <- unname(lt$df1)
+    df2  <- unname(lt$df2)
+    pval <- format.pval(lt$p, digits = 4, eps = 0.0001)
+    
+    tags$div(
+      class = "hatpc-panel",
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Levene's Test of Equal Variance"),
+        p(HTML(glue("F<sub>{df1}, {df2}</sub> = {stat}, p = {pval}")))
+      )
+    )
   })
   
   output$q2_violin_box <- renderPlot({
@@ -1188,13 +1225,11 @@ server <- function(input, output) {
     
     # Unicode glyphs used in the write-up
     mu   <- "μ"   # μ
-    sig  <- "σ"   # σ
     neq  <- "≠"   # ≠
-    sim  <- "∼"   # ∼
     dots <- "…"   # …
     
     hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              #H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
     assumptions <- p(HTML(glue(
       "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
@@ -1267,45 +1302,148 @@ server <- function(input, output) {
   }
   
   #-------------------------
-  # DATA1X01 tab
+  # Rental status vs Grade tab (DATA1X01 / DATA2X02 chosen via dropdown)
   #-------------------------
-  perm_res_1x01 <- eventReactive(input$run_perm_1x01, {
+  perm_res_rent <- eventReactive(input$run_perm_rent, {
     validate(
-      need(input$q3_B_2 >= 1 && input$q3_B_2 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+      need(input$q3_B_rent >= 1 && input$q3_B_rent <= 100000, "Please enter a number of permutations between 1 and 100,000."),
+      need(input$q3_grade_choice %in% c("grade_1X01", "grade_2X02"), "Please select a grade variable.")
     )
     
-    run_rent_grade_perm("grade_1X01", input$q3_B_2)
+    run_rent_grade_perm(input$q3_grade_choice, input$q3_B_rent)
   }, ignoreNULL = FALSE)
   
-  output$q3_perm_summary_1x01 <- renderUI({
-    req(perm_res_1x01())
-    render_rent_grade_summary(perm_res_1x01(), "DATA1X01", input$q3_B_2)
+  grade_var_label <- function(grade_var) {
+    if (grade_var == "grade_1X01") "DATA1X01" else "DATA2X02"
+  }
+  
+  output$q3_perm_summary_rent <- renderUI({
+    req(perm_res_rent())
+    res <- perm_res_rent()
+    render_rent_grade_summary(res, grade_var_label(res$grade_var), input$q3_B_rent)
   })
   
-  output$q3_perm_plot_1x01 <- renderPlot({
-    req(perm_res_1x01())
-    render_rent_grade_plot(perm_res_1x01(), "DATA1X01")
+  output$q3_perm_plot_rent <- renderPlot({
+    req(perm_res_rent())
+    res <- perm_res_rent()
+    render_rent_grade_plot(res, grade_var_label(res$grade_var))
   })
   
-  #-------------------------
-  # DATA2X02 tab
-  #-------------------------
-  perm_res_2x02 <- eventReactive(input$run_perm_2x02, {
+  # -------------------------------------------------------
+  # QUESTION 3 - DATA2002/DATA2902 ENROLMENT vs SLEEP HOURS
+  # -------------------------------------------------------
+  perm_res_sleep <- eventReactive(input$run_perm_sleep, {
+    req(df)
+    
     validate(
-      need(input$q3_B_3 >= 1 && input$q3_B_3 <= 100000, "Please enter a number of permutations between 1 and 100,000.")
+      need(input$q3_B >= 1 && input$q3_B <= 100000, "Please enter a number of permutations between 1 and 100,000.")
     )
     
-    run_rent_grade_perm("grade_2X02", input$q3_B_3)
+    B <- input$q3_B
+    
+    dat <- df %>% filter(!is.na(sleep_hours), !is.na(type_2X02))
+    
+    obs_mean_2002 <- mean(dat$sleep_hours[dat$type_2X02 == "DATA2002"], na.rm = TRUE)
+    obs_mean_2902 <- mean(dat$sleep_hours[dat$type_2X02 == "DATA2902"], na.rm = TRUE)
+    obs_diff <- obs_mean_2002 - obs_mean_2902
+    
+    diffs <- replicate(B, {
+      shuffled_type <- sample(dat$type_2X02)
+      mean_2002 <- mean(dat$sleep_hours[shuffled_type == "DATA2002"], na.rm = TRUE)
+      mean_2902 <- mean(dat$sleep_hours[shuffled_type == "DATA2902"], na.rm = TRUE)
+      mean_2002 - mean_2902
+    })
+    
+    pval <- mean(abs(diffs) >= abs(obs_diff))
+    
+    list(dist = diffs, obs_diff = obs_diff, pval = pval, g1 = "DATA2002", g2 = "DATA2902")
   }, ignoreNULL = FALSE)
   
-  output$q3_perm_summary_2x02 <- renderUI({
-    req(perm_res_2x02())
-    render_rent_grade_summary(perm_res_2x02(), "DATA2X02", input$q3_B_3)
+  output$q3_perm_summary_sleep <- renderUI({
+    req(perm_res_sleep())
+    res <- perm_res_sleep()
+    
+    B <- input$q3_B
+    
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    neq  <- "≠"   # ≠
+    dots <- "…"   # …
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    
+    assumptions <- p(HTML(glue(
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
+      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
+      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
+    
+    test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
+    
+    conclusion <- if (res$pval < 0.05) 
+    {("At alpha = 0.05, since p-value < 0.05, we reject the null hypothesis. There is a significant difference in mean sleep hours between the cohorts.\n")} 
+    else {("At alpha = 0.05, since p-value > 0.05, we fail to reject the null hypothesis. We do not have sufficient evidence to claim a difference in mean sleep hours between the cohorts.\n")}
+    
+    tags$div(
+      class = "hatpc-panel",
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Significance level"),
+        p("alpha = 0.05")
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Hypothesis"),
+        p(paste0("Let x: ", res$g1, " group and y: ", res$g2, " group."),
+          p(hypothesis)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Assumptions"),
+          p(assumptions)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("Test-statistic"),
+          p(test_statistic)
+        ),
+        
+        tags$div(
+          class = "hatpc-step",
+          tags$strong("p-value"),
+          p(paste0("The permutation p-value is ", format.pval(res$pval, eps = 1/input$q3_B), 
+                   ", calculated using ", B ," Monte Carlo resamples.")),
+          
+          
+          tags$div(
+            class = "hatpc-step",
+            tags$strong("Conclusion"),
+            p(conclusion))
+        )
+      )
+    )
   })
   
-  output$q3_perm_plot_2x02 <- renderPlot({
-    req(perm_res_2x02())
-    render_rent_grade_plot(perm_res_2x02(), "DATA2X02")
+  output$q3_perm_plot_sleep <- renderPlot({
+    req(perm_res_sleep())
+    res <- perm_res_sleep()
+    
+    df_plot <- data.frame(val = res$dist)
+    
+    ggplot(df_plot, aes(x = val)) +
+      geom_histogram(bins = 30, fill = "#404080", color = "white") +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      labs(
+        title = "Null Distribution of Difference in Mean Sleep Hours\n(DATA2002 - DATA2902)",
+        x = "Simulated Difference Under Null Hypothesis",
+        y = "Frequency"
+      ) +
+      theme_minimal()
   })
   
   
@@ -1441,8 +1579,9 @@ server <- function(input, output) {
     
   }, rownames = TRUE)
   
-  output$q1_chi_independence <- renderPrint({
-    q1_ind_test()
+  output$q1_chi_independence <- renderUI({
+    result_text <- paste(capture.output(print(q1_ind_test())), collapse = "\n")
+    hatpc_text_output("Chi-square Test of Independence", result_text)
   })
   
   
@@ -1563,7 +1702,7 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 1 - CHI-SQUARE ASSUMPTION CHECK
   # -------------------------------------------------------
-  output$q1_ind_assumptions <- renderPrint({
+  output$q1_ind_assumptions <- renderUI({
     
     expected <- q1_ind_test()$expected
     
@@ -1572,101 +1711,72 @@ server <- function(input, output) {
     cells_below_1 <- sum(expected < 1)
     percent_below_5 <- (cells_below_5 / total_cells) * 100
     
-    cat("Expected Cell Count Check\n\n")
-    
-    cat(
-      "Cells with expected count below 5:",
-      cells_below_5,
-      "out of",
-      total_cells,
-      paste0("(", round(percent_below_5, 1), "%)"),
-      "\n"
+    lines <- c(
+      "Expected Cell Count Check",
+      "",
+      paste0(
+        "Cells with expected count below 5: ",
+        cells_below_5,
+        " out of ",
+        total_cells,
+        " (", round(percent_below_5, 1), "%)"
+      ),
+      paste0(
+        "Cells with expected count below 1: ",
+        cells_below_1
+      ),
+      ""
     )
     
-    cat(
-      "Cells with expected count below 1:",
-      cells_below_1,
-      "\n\n"
-    )
-    
-    if (cells_below_1 == 0 && percent_below_5 <= 20) {
-      
-      cat(
-        "Conclusion: The expected-count condition for the ",
-        "chi-square approximation is satisfied."
-      )
-      
+    conclusion_line <- if (cells_below_1 == 0 && percent_below_5 <= 20) {
+      "Conclusion: The expected-count condition for the chi-square approximation is satisfied."
     } else {
-      
-      cat(
-        "Conclusion: The expected-count condition may not be satisfied. ",
-        "The Pearson chi-square approximation should therefore be ",
-        "interpreted with caution."
-      )
+      "Conclusion: The expected-count condition may not be satisfied. The Pearson chi-square approximation should therefore be interpreted with caution."
     }
+    
+    result_text <- paste(c(lines, conclusion_line), collapse = "\n")
+    
+    hatpc_text_output("Expected Cell Count Check", result_text)
   })
   
   
   # -------------------------------------------------------
   # QUESTION 1 - CHI-SQUARE INTERPRETATION
   # -------------------------------------------------------
-  output$q1_ind_interpretation <- renderPrint({
+  output$q1_ind_interpretation <- renderUI({
     
     test <- q1_ind_test()
     
     p_value <- test$p.value
     
-    cat(
-      "Selected variables:",
-      input$q1_ind_x,
-      "and",
-      input$q1_ind_y,
-      "\n\n"
-    )
-    
-    cat(
-      "Chi-square statistic:",
-      round(unname(test$statistic), 3),
-      "\n"
-    )
-    
-    cat(
-      "Degrees of freedom:",
-      unname(test$parameter),
-      "\n"
-    )
-    
-    cat(
-      "P-value:",
-      format.pval(p_value, digits = 4, eps = 0.0001),
-      "\n\n"
-    )
-    
-    if (p_value < 0.05) {
-      
-      cat(
+    conclusion_line <- if (p_value < 0.05) {
+      paste0(
         "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
-        "There is statistically significant evidence of an association ",
-        "between ",
-        input$q1_ind_x,
-        " and ",
-        input$q1_ind_y,
-        ".",
-        sep = ""
+        "There is statistically significant evidence of an association between ",
+        input$q1_ind_x, " and ", input$q1_ind_y, "."
       )
-      
     } else {
-      
-      cat(
+      paste0(
         "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
         "There is insufficient evidence of an association between ",
-        input$q1_ind_x,
-        " and ",
-        input$q1_ind_y,
-        ".",
-        sep = ""
+        input$q1_ind_x, " and ", input$q1_ind_y, "."
       )
     }
+    
+    result_text <- paste(
+      c(
+        paste0("Selected variables: ", input$q1_ind_x, " and ", input$q1_ind_y),
+        "",
+        paste0("Chi-square statistic: ", round(unname(test$statistic), 3)),
+        paste0("Degrees of freedom: ", unname(test$parameter)),
+        paste0("P-value: ", format.pval(p_value, digits = 4, eps = 0.0001)),
+        "",
+        conclusion_line
+      ),
+      collapse = "\n"
+    )
+    
+    hatpc_text_output("Interpretation", result_text)
   })
   
   
@@ -1710,8 +1820,9 @@ server <- function(input, output) {
   }, rownames = TRUE)
   
   
-  output$q1_chi_homogeneity <- renderPrint({
-    q1_hom_test()
+  output$q1_chi_homogeneity <- renderUI({
+    result_text <- paste(capture.output(print(q1_hom_test())), collapse = "\n")
+    hatpc_text_output("Chi-square Test of Homogeneity", result_text)
   })
   
   
@@ -1829,56 +1940,41 @@ server <- function(input, output) {
   })
   
   
-  output$q1_hom_interpretation <- renderPrint({
+  output$q1_hom_interpretation <- renderUI({
     
     test <- q1_hom_test()
     p_value <- test$p.value
     
-    cat(
-      "Null hypothesis: The distribution of paid employment status ",
-      "is the same for DATA2002 and DATA2902 students.\n\n"
-    )
-    
-    cat(
-      "Alternative hypothesis: The distribution of paid employment ",
-      "status differs between DATA2002 and DATA2902 students.\n\n"
-    )
-    
-    cat(
-      "Chi-square statistic:",
-      round(unname(test$statistic), 3),
-      "\n"
-    )
-    
-    cat(
-      "Degrees of freedom:",
-      unname(test$parameter),
-      "\n"
-    )
-    
-    cat(
-      "P-value:",
-      format.pval(p_value, digits = 4, eps = 0.0001),
-      "\n\n"
-    )
-    
-    if (p_value < 0.05) {
-      
-      cat(
+    conclusion_line <- if (p_value < 0.05) {
+      paste0(
         "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
-        "There is statistically significant evidence that the distribution ",
-        "of paid employment status is not homogeneous across DATA2002 ",
-        "and DATA2902 students."
+        "There is statistically significant evidence that the distribution of paid employment status ",
+        "is not homogeneous across DATA2002 and DATA2902 students."
       )
-      
     } else {
-      
-      cat(
+      paste0(
         "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
-        "There is insufficient evidence that the distribution of paid ",
-        "employment status differs between DATA2002 and DATA2902 students."
+        "There is insufficient evidence that the distribution of paid employment status ",
+        "differs between DATA2002 and DATA2902 students."
       )
     }
+    
+    result_text <- paste(
+      c(
+        "Null hypothesis: The distribution of paid employment status is the same for DATA2002 and DATA2902 students.",
+        "",
+        "Alternative hypothesis: The distribution of paid employment status differs between DATA2002 and DATA2902 students.",
+        "",
+        paste0("Chi-square statistic: ", round(unname(test$statistic), 3)),
+        paste0("Degrees of freedom: ", unname(test$parameter)),
+        paste0("P-value: ", format.pval(p_value, digits = 4, eps = 0.0001)),
+        "",
+        conclusion_line
+      ),
+      collapse = "\n"
+    )
+    
+    hatpc_text_output("Interpretation", result_text)
   })
   
   
@@ -1964,8 +2060,9 @@ server <- function(input, output) {
   })
   
   
-  output$q1_cmh <- renderPrint({
-    q1_cmh_test()
+  output$q1_cmh <- renderUI({
+    result_text <- paste(capture.output(print(q1_cmh_test())), collapse = "\n")
+    hatpc_text_output("Cochran-Mantel-Haenszel Chi-square Test", result_text)
   })
   
   
@@ -2086,96 +2183,57 @@ server <- function(input, output) {
   # -------------------------------------------------------
   # QUESTION 1 - CMH ADJUSTED INTERPRETATION
   # -------------------------------------------------------
-  output$q1_cmh_interpretation <- renderPrint({
+  output$q1_cmh_interpretation <- renderUI({
     
     test <- q1_cmh_test()
     p_value <- test$p.value
     
-    cat(
-      "Null hypothesis: After controlling for Domestic/International ",
-      "student status, course enrolment and paid employment status ",
-      "are conditionally independent.\n\n"
-    )
-    
-    cat(
-      "Alternative hypothesis: After controlling for Domestic/International ",
-      "student status, course enrolment and paid employment status ",
-      "remain associated.\n\n"
-    )
-    
-    cat(
-      "CMH chi-square statistic:",
-      round(unname(test$statistic), 3),
-      "\n"
-    )
-    
-    cat(
-      "Degrees of freedom:",
-      unname(test$parameter),
-      "\n"
-    )
-    
-    cat(
-      "Adjusted P-value:",
-      format.pval(
-        p_value,
-        digits = 4,
-        eps = 0.0001
-      ),
-      "\n"
+    lines <- c(
+      "Null hypothesis: After controlling for Domestic/International student status, course enrolment and paid employment status are conditionally independent.",
+      "",
+      "Alternative hypothesis: After controlling for Domestic/International student status, course enrolment and paid employment status remain associated.",
+      "",
+      paste0("CMH chi-square statistic: ", round(unname(test$statistic), 3)),
+      paste0("Degrees of freedom: ", unname(test$parameter)),
+      paste0("Adjusted P-value: ", format.pval(p_value, digits = 4, eps = 0.0001))
     )
     
     if (!is.null(test$estimate)) {
-      
-      cat(
-        "Common odds ratio estimate:",
-        round(unname(test$estimate), 3),
-        "\n"
-      )
+      lines <- c(lines, paste0("Common odds ratio estimate: ", round(unname(test$estimate), 3)))
     }
     
     if (!is.null(test$conf.int)) {
-      
-      cat(
-        "95% confidence interval for the common odds ratio:",
+      lines <- c(
+        lines,
         paste0(
-          "(",
-          round(test$conf.int[1], 3),
-          ", ",
-          round(test$conf.int[2], 3),
-          ")"
-        ),
-        "\n"
+          "95% confidence interval for the common odds ratio: (",
+          round(test$conf.int[1], 3), ", ", round(test$conf.int[2], 3), ")"
+        )
       )
     }
     
-    cat("\n")
-    
-    if (p_value < 0.05) {
-      
-      cat(
-        "Conclusion: At alpha = 0.05, we reject the null hypothesis. ",
-        "There is statistically significant evidence of an association ",
-        "between course enrolment and paid employment status even after ",
-        "controlling for Domestic/International student status."
+    conclusion_line <- if (p_value < 0.05) {
+      paste0(
+        "Conclusion: At alpha = 0.05, we reject the null hypothesis. There is statistically significant evidence of an ",
+        "association between course enrolment and paid employment status even after controlling for Domestic/International student status."
       )
-      
     } else {
-      
-      cat(
-        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. ",
-        "After controlling for Domestic/International student status, ",
-        "there is insufficient evidence of an association between course ",
-        "enrolment and paid employment status."
+      paste0(
+        "Conclusion: At alpha = 0.05, we fail to reject the null hypothesis. After controlling for Domestic/International student status, ",
+        "there is insufficient evidence of an association between course enrolment and paid employment status."
       )
     }
+    
+    result_text <- paste(c(lines, "", conclusion_line), collapse = "\n")
+    
+    hatpc_text_output("Adjusted Interpretation", result_text)
   })
   
   
   # -------------------------------------------------------
   # QUESTION 1 - UNADJUSTED VS ADJUSTED COMPARISON
   # -------------------------------------------------------
-  output$q1_cmh_comparison <- renderPrint({
+  output$q1_cmh_comparison <- renderUI({
     
     unadjusted_test <- q1_hom_test()
     adjusted_test <- q1_cmh_test()
@@ -2183,77 +2241,44 @@ server <- function(input, output) {
     unadjusted_p <- unadjusted_test$p.value
     adjusted_p <- adjusted_test$p.value
     
-    cat("Unadjusted Pearson chi-square analysis\n")
-    
-    cat(
-      "P-value:",
-      format.pval(
-        unadjusted_p,
-        digits = 4,
-        eps = 0.0001
-      ),
-      "\n\n"
-    )
-    
-    cat(
-      "CMH analysis adjusted for Domestic/International status\n"
-    )
-    
-    cat(
-      "P-value:",
-      format.pval(
-        adjusted_p,
-        digits = 4,
-        eps = 0.0001
-      ),
-      "\n\n"
-    )
-    
-    if (
-      unadjusted_p < 0.05 &&
-      adjusted_p < 0.05
-    ) {
-      
-      cat(
-        "Comparison: Both the unadjusted and adjusted analyses are ",
-        "statistically significant. The evidence of an association ",
-        "between course enrolment and employment status remains after ",
+    comparison_line <- if (unadjusted_p < 0.05 && adjusted_p < 0.05) {
+      paste0(
+        "Comparison: Both the unadjusted and adjusted analyses are statistically significant. ",
+        "The evidence of an association between course enrolment and employment status remains after ",
         "controlling for Domestic/International student status."
       )
-      
-    } else if (
-      unadjusted_p < 0.05 &&
-      adjusted_p >= 0.05
-    ) {
-      
-      cat(
-        "Comparison: The unadjusted association is statistically ",
-        "significant, but the adjusted CMH association is not. ",
-        "This suggests that differences in the Domestic/International ",
-        "student mix may help explain the unadjusted association."
+    } else if (unadjusted_p < 0.05 && adjusted_p >= 0.05) {
+      paste0(
+        "Comparison: The unadjusted association is statistically significant, but the adjusted CMH association is not. ",
+        "This suggests that differences in the Domestic/International student mix may help explain the unadjusted association."
       )
-      
-    } else if (
-      unadjusted_p >= 0.05 &&
-      adjusted_p < 0.05
-    ) {
-      
-      cat(
-        "Comparison: The unadjusted analysis is not statistically ",
-        "significant, but the adjusted CMH analysis is. Controlling for ",
-        "Domestic/International student status reveals evidence of an ",
-        "association that was not apparent in the unadjusted analysis."
+    } else if (unadjusted_p >= 0.05 && adjusted_p < 0.05) {
+      paste0(
+        "Comparison: The unadjusted analysis is not statistically significant, but the adjusted CMH analysis is. ",
+        "Controlling for Domestic/International student status reveals evidence of an association that was not apparent in the unadjusted analysis."
       )
-      
     } else {
-      
-      cat(
-        "Comparison: Neither the unadjusted nor the adjusted analysis ",
-        "is statistically significant. There is insufficient evidence ",
-        "of an association between course enrolment and employment status ",
-        "before or after controlling for Domestic/International student status."
+      paste0(
+        "Comparison: Neither the unadjusted nor the adjusted analysis is statistically significant. ",
+        "There is insufficient evidence of an association between course enrolment and employment status before or after ",
+        "controlling for Domestic/International student status."
       )
     }
+    
+    result_text <- paste(
+      c(
+        "Unadjusted Pearson chi-square analysis",
+        paste0("P-value: ", format.pval(unadjusted_p, digits = 4, eps = 0.0001)),
+        "",
+        "CMH analysis adjusted for Domestic/International status",
+        paste0("P-value: ", format.pval(adjusted_p, digits = 4, eps = 0.0001)),
+        "",
+        comparison_line
+      ),
+      collapse = "\n"
+    )
+    
+    hatpc_text_output("Unadjusted vs Adjusted Comparison", result_text)
   })
 }
 
