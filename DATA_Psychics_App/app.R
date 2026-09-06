@@ -423,13 +423,19 @@ ui <- fluidPage(
           value = "intro",
           
           h2("Research Motivation"),
-          p("As university students, we feel the pressure of needing to balance our univeristy life with our personal life. 
+          p("As university students, we feel the pressure of needing to balance our 
+          university life with our personal life. 
           Factors like having a part/full-time job, long commute, or not getting 
           enough sleep each night can add pressure and affect academic performance. 
-          The same is true in the other direction, as academic pressures can spill over into our personal lives, influencing lifestyle choices and 
-          sometimes leading to reduced self‑care, such as irregular sleep patterns or even forgetting basic habits like drinking enough water. "),
-          p("Hence, we created this app to investigate how different lifestyle factors are associated with academic performance, and vice versa. By performing relevant 
-            statistical tests, our findings may assist the student support services at University of Sydney to move toward earlier, more targeted support for students who may be struggling."),
+          The same is true in the other direction, as academic pressures can spill 
+          over into our personal lives, influencing lifestyle choices and 
+          sometimes leading to reduced self‑care, such as irregular sleep patterns 
+          or even forgetting basic habits like drinking enough water. "),
+          p("Hence, we created this app to investigate how different lifestyle 
+          factors are associated with academic performance, and vice versa. 
+          By performing relevant statistical tests, our findings may assist the 
+          student support services at University of Sydney to move toward earlier, 
+          more targeted support for students who may be struggling."),
           
           h2("Data Description"),
           p("The dataset was collected through a voluntary survey of students enrolled 
@@ -785,7 +791,7 @@ ui <- fluidPage(
           title = "QUESTION 3",
           value = "question3",
           
-          h3("Question 3 (Monte Carlo simulation Tests)"),
+          h3("Monte Carlo Simulation Test for Mean Differences in Grades and Sleep Hours"),
           
           tabsetPanel(
             id = "q3_tab",
