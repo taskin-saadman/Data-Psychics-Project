@@ -534,10 +534,7 @@ ui <- fluidPage(
               ),
               
               h4("Significance Level"),
-              
-              p(
-                "All hypothesis tests use a significance level of α = 0.05."
-              )
+              p("All hypothesis tests use a significance level of α = 0.05.")
             ),
             
             tabPanel(
@@ -676,7 +673,10 @@ ui <- fluidPage(
               
               p("If a numerical variable is chosen, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
                 If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
-                For ordinal data, the Wilcoxon Rank-Sum test is conducted.")
+                For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
+              
+              h4("Significance Level"),
+              p("All hypothesis tests use a significance level of α = 0.05.")
               
             ),
             
@@ -713,18 +713,23 @@ ui <- fluidPage(
               value = "intro_q3",
               
               h4("Research Question"),
-              p("Is there a difference in mean DATA1X01 grade, and separately in mean DATA2X02 grade, between students who pay rent and those who do not, using Monte Carlo simulation?"),
+              p("Is there a difference in mean DATA1X01 and DATA2X02 grades between 
+                students who pay rent and those who do not, using Monte Carlo simulation?"),
+            
+              h4("Analysis"),
+              p(
+                "This research question involves conducting a Monte Carlo 
+                permutation test, which is resampling‑based test that compares 
+                the observed mean differences expected by pure random change when
+                group labels are shuffled."),
               
-              p("To evaluate the research question based on the selected variables, 
-                our program detects which two sample test is most suitable following the assumptions:"),
+              p("In the subsequent tabs, please choose your desired resampling size 
+              for the Monte Carlo simulations. The program will then conduct the 
+                simulations and automatically update the results."),
               
-              h5("Student Two Sample T-Test"),
-              tags$ul(
-                tags$li("Quantitative: data values collected are quantitative."),
-                tags$li("Independence within and between groups: each row represents an individual student's survey response."),
-                tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
-                tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories."))
-            ),
+              h4("Significance Level"),
+              p("All hypothesis tests use a significance level of α = 0.05.")
+              ),
             
             tabPanel(
               title = "DATA1X01 Grade",
@@ -732,7 +737,7 @@ ui <- fluidPage(
               
               h4("Permutation Test: DATA1X01 Grade by Rental Status"),
               p(
-                "We use a Monte Carlo simulation test to determine if mean ",
+                "We use a Monte Carlo permutation test to determine if mean ",
                 "DATA1X01 grade differs significantly between students ",
                 "who pay rent and those who do not."
               ),
@@ -848,6 +853,15 @@ server <- function(input, output) {
     
     groups <- levels(df[[xvar]])
     
+    grouping_var <- names(nominal_choices)[nominal_choices == xvar]
+    
+    #identify which raw name was selected based on the active radio button
+    raw_val <- q2_yvar()
+    
+    #combine lists to map backend name back to its display label
+    all_choices <- c(numeric_choices, ordinal_choices)
+    clean_label <- names(all_choices)[all_choices == raw_val]
+    
     if (input$yvar_type == "Numerical") {
       
       yvar <- input$drop2_yvar_num
@@ -923,9 +937,13 @@ server <- function(input, output) {
       )))
       
       conclusion <- if (reject) {
-        "Since the p-value < 0.05, we reject H₀."
+        p(HTML(glue("Since the p-value < 0.05, we reject H₀.
+        There is a significant difference in mean ", clean_label, " 
+        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
       } else {
-        "Since the p-value > 0.05, we do not reject H₀."
+        p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
+        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
+        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
       }
       
     } else {
@@ -950,15 +968,19 @@ server <- function(input, output) {
       
       assumptions <- "Xi and Yi are independent and follow the same distribution but differ by a shift."
       
-      test_statistic <- glue(
-        "Under H₀,  W follows the WRS(nX, nY ) distribution. ",
+      test_statistic <- p(HTML(glue(
+        "Under H₀,  W follows the WRS(n<sub>X</sub>, n<sub>Y</sub>) distribution. ",
         "The test statistic is {stat}."
-      )
+      )))
       
       conclusion <- if (reject) {
-        "Since the p-value < 0.05, we reject H₀."
+        p(HTML(glue("Since the p-value < 0.05, we reject H₀.
+        There is a significant difference in mean ", clean_label, " 
+        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
       } else {
-        "Since the p-value > 0.05, we do not reject H₀."
+        p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
+        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
+        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
       }
     }
     
