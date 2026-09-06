@@ -403,22 +403,27 @@ ui <- fluidPage(
           value = "intro",
           
           h2("Research Motivation"),
-          p(
-            "As university students, we feel the pressure of needing to balance our univeristy life with our personal life. Factors like having a part-time job,
-            long commute, or not getting enough sleep each night can add pressure and affect academic performance."),
-            tags$br(),
-          p("We created this app to investigate how different academic and lifestyle factors are associated with academic performance. By performing relevant 
-            statistical tests, our findings may assist the University of Sydney to move toward earlier, more targeted support for students who may be struggling."
-          ),
+          p("As university students, we feel the pressure of needing to balance our univeristy life with our personal life. 
+          Factors like having a part/full-time job, long commute, or not getting 
+          enough sleep each night can add pressure and affect academic performance. 
+          The same is true in the other direction, as academic pressures can spill over into our personal lives, influencing lifestyle choices and 
+          sometimes leading to reduced self‑care, such as irregular sleep patterns or even forgetting basic habits like drinking enough water. "),
+          p("Hence, we created this app to investigate how different lifestyle factors are associated with academic performance, and vice versa. By performing relevant 
+            statistical tests, our findings may assist the student support services at University of Sydney to move toward earlier, more targeted support for students who may be struggling."),
           
           h2("Data Description"),
-          p("The dataset was collected through a voluntary survey of students enrolled in the University of Sydney's DATA2002 and DATA2902 units.
-            Students completed the survey during allocated workshop hours, which helped maximise participation and to gather a more accurate representation of the population."),
-          p("Once cleaned and deidentified, the dataset contains 673 responses across 23 variables, which can be categorised into 3 groups:"),
+          p("The dataset was collected through a voluntary survey of students enrolled 
+          in the University of Sydney's DATA2002 and DATA2902 units in semester 2, 2026.
+          Originally collected for the unit's research regarding  syllabus design and student learning pathways, the
+          data was made available to students in completion of the first group project.
+          Students were encouraged to complete the survey during the first lecture, as well as allocated workshop hours, 
+          which helped maximise participation and to gather a more accurate representation of the cohort."),
+          
+          p("Once cleaned and deidentified, the dataset contains 673 responses across 
+            23 variables, which can be categorised into 3 main groups:"),
           tags$ol(
             tags$li(
               tags$strong("Demographic and Lifestyle: "),
-              tags$br(),
               tags$br(),
               "Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week), hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, and favourite music genre."
             ),
@@ -426,25 +431,39 @@ ui <- fluidPage(
             tags$li(
               tags$strong("Academic Background and Study Behaviour: "),
               tags$br(),
-              tags$br(),
-              "Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902, typical approach to assessments (e.g. gradual, cram, immediately), and commute time to campus."
+              "Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902, typical approach to assessments (e.g. gradually, crammed, immediately), and commute time to campus in minutes."
             ),
             tags$br(),
             tags$li(
               tags$strong("Weekly learning choices: "),
               tags$br(),
-              tags$br(),
-              "Which learning pathway and revision lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice. Also included is whether the student multi-tasks during lectures, what tasks they do, and why."
+              "The learning pathway and lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice. 
+              It also included a boolean response on whether the student multi-tasks during lectures, what tasks they do, and why."
             )
           ),
-          tags$br(),
-          p("This dataset is not a random sample as it more resembles a census style with voluntary non-response. Every student enrolled in DATA2X02 was invited to participate rather than a randomly
-          selected group of university students."),
-          tags$br(),
-          p("The sample also contains a non-response bias as students who chose to complete the survey or attended their designated workshop may have been
-          influenced to respond compared to students who did not attend."),
-          tags$br(),
           h2("Limitations and Biases"),
+          p("This dataset provided can not be considered a random sample as it more 
+          closely resembles a census-style survey with voluntary participation. 
+          Every student enrolled in DATA2X02 was invited to participate rather than a randomly
+          sampled group of university students. This limits the generalisability of the 
+          project's findings towards the overall population of USYD students. However,
+          this does not diminish the value of analysis conducted on the DATA2X02 cohort itself.
+          While not generalisable, it still offers meaningful insights into this specific group and can
+          serve as a useful pilot study/proof-of-concept for future research employing
+          more rigorous random sampling methods."),
+          
+          p("Following that, however, the sample exhibits voluntary response bias, 
+          given that participation in the survey was left to the students' discretion,
+          likely drawing in inidivduals with stronger views or particular characteristics.
+          In contrast, non-response bias may also be present, which is when students
+          who did not complete the survey differ in meaningful way from the respondents,
+          reducing the represantiveness of the full DATA2X02 cohort."),
+          
+          p("Keeping these limitations in mind, we will avoid making claims about 
+            the broader USYD population and interpret our results only within the 
+            context of this specific DATA2X02 cohort. This approach helps mitigate 
+            the impact of the sampling limitations and ensures our explanations 
+            remain appropriately cautious."),
           
           h2("Data Processing"),
           h3("Critique of Survey Questions"),
@@ -462,24 +481,24 @@ ui <- fluidPage(
           
           h3("Data Cleaning"),
           p(
-            "The column names of the dataset were standardised to summarise the recorded value based on the questions asked alongside its unit of measurement.
-           All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors to preserve their ordinal structure.
+            "The column names of the dataset were standardised to summarise the recorded value.
+           All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors.
             A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."
           ),
           p(
-            "The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency and reducing storage requirements.
-            The Boolean rent and multitasking variables were reprocessed to ensure consistency and prevent misaligned records: rent values above zero were coded as yes, while zero values were coded as no.
+            "The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency.
+            The Boolean rent and multitasking variables were reprocessed to prevent misaligned records: rent values above zero were coded as yes, while zero values were coded as no.
             For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."
           ),
           
           p(
             "Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus,
-            spending more than 1.5 × 38 hours per week in employment (38 hours a week is the Fair Work Ombudsman (n.d.) limit for full-time work,
+            spending more than 1.5 × 38 hours per week in employment (38 hours a week is the weekly limit for full-time work (Fair Work Ombudsman (n.d.)),
             with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations
-            such as more than 20 hours (as it substantially exceeds normal adult and most clinical hypersomnia ranges (Bollu et al., 2018), or exactly zero hours a day.
-            Although a subset of observations reported water consumption values far above the typical range, manual inspection of such records indicated no inconsistencies in the accompanying data.
-            Given the plausibility of genuine high intake, such as due to medical or lifestyle factors, these observations were retained rather than treated as errors. 
-            Similarly, entries reporting 0 litres of daily water consumption were retained, as it may reflect individuals who hydrate through other beverages and therefore did not report any “plain water” consumption."
+            such as more than 20 hours (substantially exceeds normal adult and most clinical hypersomnia ranges (Bollu et al., 2018), or exactly zero hours a day.
+            Although a subset of observations reported water consumption values far above the typical range, manual inspection indicated no inconsistencies in the accompanying data.
+            Given the plausibility of genuine high intake, such as due to medical or lifestyle factors, these observations were retained. 
+            Similarly, entries reporting 0 litres of daily water consumption were retained, as it may reflect individuals who hydrate through other beverages."
           ),
           
           p(
