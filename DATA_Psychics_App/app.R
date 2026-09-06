@@ -675,15 +675,14 @@ ui <- fluidPage(
                 If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
                 For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
               
-              h4("Significance Level"),
-              p("All hypothesis tests use a significance level of α = 0.05.")
-              
-              h5("Note"),
-              p("Do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
+              p(HTML("<b> Note: </b>Please do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
                 numerical variable, or \"Employment Status (y/n)\" as grouping variable and
                 \"Employment Hours (hours)\" as numerical variable. This is because the \"no\" group for
                 both grouping variables correspond to a numerical value of zero in the corresponding
-                numerical variable.")
+                numerical variable.")),
+              
+              h4("Significance Level"),
+              p("All hypothesis tests use a significance level of α = 0.05."),
             ),
             
             #second tabset
@@ -695,7 +694,9 @@ ui <- fluidPage(
                 condition = "input.yvar_type == 'Numerical'",
                 
                 h4("Q-Q Plot: Visual check for normality"),
-                p("The Q-Q plots below serve as a visual check if the data is normally distributed."),
+                p("The Q-Q plots below serve as an additional visual check if the data is normally distributed.
+                  However, for the purposes of our analysis, as the sample is large, we assume Central Limit Theorem applies
+                  for the means of both groups, ensuring the normality assumption holds."),
                 plotOutput("q2_qqplot"),
                 
                 h4("Violin and box plots: Visual check for distribution and spread"),
@@ -706,8 +707,11 @@ ui <- fluidPage(
                 
                 h4("Levene's test of equal variance"),
                 p("Levene's test gives a numerical value to the equality of variances between two
-                  groups. It can be assumed that the variance of one group is independent to that
+                  groups. To conduct it, it can be assumed that the variance of one group is independent to that
                   of the other group."),
+                p("The null hypothesis states that the variances are equal across groups.
+                  Hence, a small p-value of less than 0.05 indicates homogeneity of variance across groups, 
+                  while a large p-value indicates significantly different variances, so the equal variance assumption is violated."),
                 verbatimTextOutput("q2_levene")
               ),
               
@@ -801,6 +805,7 @@ ui <- fluidPage(
           h4("AI Usage Statement"),
           p("Taskin - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
           p("Felix - I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts."),
+          p("Nadh - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it.")
           
           h4("ISI Professional Ethics Statement"),
           p("Shared Value: Throughout our research process, we maintained respect for the privacy of the participants by fairly processing the data, ensuring truthfulness and integrity in  handling statistical results."),
