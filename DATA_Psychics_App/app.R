@@ -438,8 +438,12 @@ ui <- fluidPage(
             )
           ),
           tags$br(),
-          p("random sample"),
-          
+          p("This dataset is not a random sample as it more resembles a census style with voluntary non-response. Every student enrolled in DATA2X02 was invited to participate rather than a randomly
+          selected group of university students."),
+          tags$br(),
+          p("The sample also contains a non-response bias as students who chose to complete the survey or attended their designated workshop may have been
+          influenced to respond compared to students who did not attend."),
+          tags$br(),
           h2("Limitations and Biases"),
           
           h2("Data Processing"),
