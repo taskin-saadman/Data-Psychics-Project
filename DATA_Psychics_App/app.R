@@ -984,8 +984,7 @@ server <- function(input, output) {
       labs(
         title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
         x = labs_q2$group,
-        y = labs_q2$value
-      ) +
+        y = labs_q2$value) +
       theme_minimal() +
       theme(legend.position = "none")
   })
@@ -998,11 +997,18 @@ server <- function(input, output) {
     xvar <- q2_xvar()
     yvar <- q2_yvar()
     
+    labs_q2 <- q2_plot_labels()
+    
     df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
       (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
        else geom_bar(color="#e9ecef", position = 'identity')) +
       scale_fill_manual(values=c("#69b3a2", "#404080")) +
-      labs(fill="") + facet_wrap(~.data[[xvar]])
+      labs(fill="",
+           title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
+           x = labs_q2$group,
+           y = labs_q2$value) + facet_wrap(~.data[[xvar]]) +
+      theme(legend.position = "none") +
+      theme_minimal() 
   })
   
   output$out2_test <- renderUI({
