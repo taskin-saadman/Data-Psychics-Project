@@ -2039,8 +2039,26 @@ server <- function(input, output) {
   
   
   output$q1_cmh_view_table <- renderTable({
-    q1_cmh_view_table()
-  }, rownames = TRUE)
+    
+    cmh_display <- as.data.frame(
+      q1_cmh_view_table(),
+      responseName = "Frequency"
+    )
+    
+    names(cmh_display) <- c(
+      "Course enrolment",
+      "Employment status",
+      "Frequency"
+    )
+    
+    cmh_display %>%
+      group_by(`Course enrolment`) %>%
+      mutate(
+        Proportion = round(Frequency / sum(Frequency), 3)
+      ) %>%
+      ungroup()
+    
+  }, rownames = FALSE)
   
   
   # -------------------------------------------------------
