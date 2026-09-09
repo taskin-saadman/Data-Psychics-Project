@@ -2,6 +2,9 @@ library(shiny)
 library(tidyverse)
 library(rstatix)
 library(glue)
+library(plotly)
+library(MKinfer)
+library(bslib)
 
 df <- read_csv(
   "DATA2X02_data_cleaned.csv",
@@ -57,6 +60,35 @@ ordinal_choices <- c(
   "DATA1X01 Grade" = "grade_1X01",
   "Aspirational DATA2X02 Grade" = "grade_2X02"
 )
+
+#global constants initialisation
+# Unicode glyphs used in the write-up
+mu   <- "μ"   # μ
+sig  <- "σ"   # σ
+neq  <- "≠"   # ≠
+sim  <- "∼"   # ∼
+dots <- "…"   # …
+alp  <- "α"   # α
+
+# Subscripted sample observations used in the assumptions
+X1  <- "X<sub>1</sub>"
+X2  <- "X<sub>2</sub>"
+Xi  <- "X<sub>i</sub>"
+Xnx <- "X<sub>n<sub>X</sub></sub>"
+Y1  <- "Y<sub>1</sub>"
+Y2  <- "Y<sub>2</sub>"
+Yi  <- "Y<sub>i</sub>"
+Yny <- "Y<sub>n<sub>Y</sub></sub>"
+
+# Distribution parameters used in the assumptions
+muX  <- glue("{mu}<sub>X</sub>")
+muY  <- glue("{mu}<sub>Y</sub>")
+sig2 <- glue("{sig}<sup>2</sup>")
+nX   <- "n<sub>X</sub>"
+nY   <- "n<sub>Y</sub>"
+
+hypothesis <- p(HTML(glue("H₀: {muX} = {muY} <br>
+                              H₁: {muX} {neq} {muY}")))
 
 hatpc_panel <- function(
     hypothesis,
@@ -117,7 +149,7 @@ hatpc_text_output <- function(title, text) {
 }
 
 ui <- fluidPage(
-  
+  theme = bs_theme(version = 5), 
   tags$head(
     tags$link(
       rel = "stylesheet",
@@ -155,10 +187,11 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'introduction'",
           
           p(
-            "The variables for this analysis are fixed by the research question."
+            "The variables for this analysis are initially chosen based on the research question
+            but they can be changed if you wish to see the Chi-Square Test applied on different variables."
           ),
           
-          tags$strong("Variables used:"),
+          tags$strong("Variables initially used:"),
           
           tags$ul(
             tags$li("Course enrolment"),
@@ -322,10 +355,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
         
-        #conditionalPanel(
-        #  condition = "input.q2_tab == 'two_sample_q2'",
-        
-        h4("Two Sample Mean Test Options"),
+        h4("Variable Selection"),
         p("Please choose one grouping variable and one numerical/ordinal variable."),
         
         selectInput(
@@ -364,6 +394,14 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question3'",
         
+        conditionalPanel(
+          condition = "input.q3_tab == 'intro_q3'",
+          
+          p(
+            "No inputs need to be selected for this tab."
+          )
+        ),
+          
         conditionalPanel(
           condition = "input.q3_tab == 'q3_perm_rent'",
           
@@ -706,14 +744,14 @@ ui <- fluidPage(
               p("To evaluate the research question based on the selected variables, 
                 our program detects which two sample test is most suitable following the assumptions:"),
               
-              h5("Student Two Sample T-Test"),
+              h5("Student's Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
                 tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
                 tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),
               
-              h5("Welch Two Sample T-Test"),
+              h5("Welch's Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
@@ -728,14 +766,14 @@ ui <- fluidPage(
                 If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
                 For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
               
+              p("If you feel unconfident with the normality assumption through CLT for the numerical variables, you can try perform
+                bootstrapping to resample the data."),
+              
               p(HTML("<b> Note: </b>Please do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
                 numerical variable, or \"Employment Status (y/n)\" as grouping variable and
                 \"Employment Hours (hours)\" as numerical variable. This is because the \"no\" group for
                 both grouping variables correspond to a numerical value of zero in the corresponding
-                numerical variable.")),
-              
-              h4("Significance Level"),
-              p("All hypothesis tests use a significance level of α = 0.05."),
+                numerical variable."))
             ),
             
             #second tabset
@@ -756,7 +794,7 @@ ui <- fluidPage(
                 p("The violin and box plots show the shape of each group's distribution, as well as
                   the median, interquartile range and outliers. Comparing the widths of the two
                   violins gives a visual check of the equal variance assumption."),
-                plotOutput("q2_violin_box"),
+                plotlyOutput("q2_violin_box"),
                 
                 h4("Levene's test of equal variance"),
                 p("Levene's test gives a numerical value to the equality of variances between two
@@ -782,10 +820,30 @@ ui <- fluidPage(
               value = "two_sample_q2",
               
               plotOutput("out2_graph"),
-              uiOutput("out2_test")
+              
+              accordion(
+                open = FALSE,
+                accordion_panel(
+                  "Two Sample Test",
+                  uiOutput("out2_test")
+                )
+              ), 
+              
+              conditionalPanel(
+                condition = "input.yvar_type == 'Numerical'",
+                checkboxInput("checkbox_q2", "Perform Bootstrapping?", FALSE), 
+                conditionalPanel(
+                  condition = "input.checkbox_q2 == true",
+                  sliderInput("slider_q2", "Range:",
+                            min = 10, max = 1000,
+                            value = 100,
+                            width = "90%"),
+                  uiOutput("out2_bootstrap")
+              )
             )
           )
-        ),
+        )
+      ),
         
         tabPanel(
           title = "QUESTION 3",
@@ -868,8 +926,6 @@ ui <- fluidPage(
           p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
           
           h4("References"),
-          p("Insert any references in APA 7th format that was used for this report, including coding references"),
-          
           p("Australian Government. (n.d.). Hours of work. Fair Work Ombudsman. Retrieved 2 September 2026, from https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work"),
           p("Bollu, P. C., Manjamalai, S., Thakkar, M., & Sahota, P. (2018). Hypersomnia. Missouri Medicine, 115(1), 85–91.")
         )
@@ -973,13 +1029,13 @@ server <- function(input, output) {
     )
   })
   
-  output$q2_violin_box <- renderPlot({
+  output$q2_violin_box <- renderPlotly({
     d <- q2_plot_data()
     labs_q2 <- q2_plot_labels()
     
-    ggplot(d, aes(x = group, y = value, fill = group)) +
-      geom_violin(width = 1.0, colour = "#e9ecef") +
-      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", alpha = 0.9, outlier.size = 1) +
+    p <- ggplot(d, aes(x = group, y = value, fill = group)) +
+      geom_violin(width = 1.0, colour = "#e9ecef", alpha = 0.8) +
+      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", outlier.size = 1) +
       scale_fill_manual(values = c("#69b3a2", "#404080")) +
       labs(
         title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
@@ -987,6 +1043,8 @@ server <- function(input, output) {
         y = labs_q2$value) +
       theme_minimal() +
       theme(legend.position = "none")
+    
+    ggplotly(p, tooltip = c("text")) |> plotly::style(hoverinfo = "none", traces = 1:2)
   })
   
   
@@ -1000,7 +1058,7 @@ server <- function(input, output) {
     labs_q2 <- q2_plot_labels()
     
     df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
-      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
+      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity')
        else geom_bar(color="#e9ecef", position = 'identity')) +
       scale_fill_manual(values=c("#69b3a2", "#404080")) +
       labs(fill="",
@@ -1012,41 +1070,10 @@ server <- function(input, output) {
   })
   
   output$out2_test <- renderUI({
-    
     alpha <- 0.05
     
-    # Unicode glyphs used in the write-up
-    mu   <- "μ"   # μ
-    sig  <- "σ"   # σ
-    neq  <- "≠"   # ≠
-    sim  <- "∼"   # ∼
-    dots <- "…"   # …
-    alp  <- "α"   # α
-    
-    # Subscripted sample observations used in the assumptions
-    X1  <- "X<sub>1</sub>"
-    X2  <- "X<sub>2</sub>"
-    Xi  <- "X<sub>i</sub>"
-    Xnx <- "X<sub>n<sub>X</sub></sub>"
-    Y1  <- "Y<sub>1</sub>"
-    Y2  <- "Y<sub>2</sub>"
-    Yi  <- "Y<sub>i</sub>"
-    Yny <- "Y<sub>n<sub>Y</sub></sub>"
-    
-    # Distribution parameters used in the assumptions
-    muX  <- glue("{mu}<sub>X</sub>")
-    muY  <- glue("{mu}<sub>Y</sub>")
-    sig2 <- glue("{sig}<sup>2</sup>")
-    nX   <- "n<sub>X</sub>"
-    nY   <- "n<sub>Y</sub>"
-    
-    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
-    
     xvar <- input$drop2_xvar
-    
     groups <- levels(df[[xvar]])
-    
     grouping_var <- names(nominal_choices)[nominal_choices == xvar]
     
     #identify which raw name was selected based on the active radio button
@@ -1055,6 +1082,7 @@ server <- function(input, output) {
     #combine lists to map backend name back to its display label
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
+    
     
     if (input$yvar_type == "Numerical") {
       
@@ -1105,7 +1133,7 @@ server <- function(input, output) {
         }
         
         variance_clause <- glue(
-          "Using Levene's test, as {lev} is greater than 0.05, X and Y have similar ",
+          "Using Levene's test, as p-value = {lev} is greater than 0.05, X and Y have similar ",
           "variances and the Student's t-test is used."
         )
         
@@ -1114,7 +1142,7 @@ server <- function(input, output) {
         indep_clause <- glue("{Xi} and {Yi} are independent and have equal variance.")
         
         variance_clause <- glue(
-          "Using Levene's test, as {lev} is less than 0.05, X and Y have different ",
+          "Using Levene's test, as p-value = {lev} is less than 0.05, X and Y have different ",
           "variances and the Welch's t-test is used."
         )
       }
@@ -1222,6 +1250,115 @@ server <- function(input, output) {
     )
   })
   
+  output$out2_bootstrap <- renderUI({
+    alpha <- 0.05
+    xvar <- q2_xvar()
+    groups <- levels(df[[xvar]])
+    
+    grouping_var <- names(nominal_choices)[nominal_choices == xvar]
+    
+    #identify which raw name was selected based on the active radio button
+    yvar <- q2_yvar()
+    
+    #combine lists to map backend name back to its display label
+    all_choices <- c(numeric_choices, ordinal_choices)
+    clean_label <- names(all_choices)[all_choices == yvar]
+    
+    n <- input$slider_q2
+    
+    f <- as.formula(
+      paste(yvar, "~", xvar)
+    )
+    
+    p_equal_var <- levene_test(
+      f,
+      data = df) %>%
+      pull(p)
+    
+    lev  <- signif(p_equal_var, 4)
+    
+    if (p_equal_var < alpha) {
+      test_name <- "Welch's t-test"
+      boot <- boot.t.test(formula = f, data = df, 
+                          alternative = "two.sided",
+                          mu = 0, paired = FALSE, var.equal = FALSE,
+                          conf.level = 0.95, R = n)
+      variance_clause <- glue(
+        "Using Levene's test, as p-value = {lev} is less than 0.05, X and Y have different ",
+        "variances and the Welch's t-test is used.")
+      } else {
+      test_name <- "Student's t-test"
+      boot <- boot.t.test(formula = f, data = df, 
+                          alternative = "two.sided",
+                          mu = 0, paired = FALSE, var.equal = TRUE,
+                          conf.level = 0.95, R = n)
+      variance_clause <- glue(
+        "Using Levene's test, as p-value = {lev} is greater than 0.05, X and Y have similar ",
+        "variances and the Student's t-test is used.")}
+
+    assumptions <- glue(" {X1}, {X2}, {dots}, {Xnx} are independent and identically distributed, 
+                          {Y1}, {Y2}, {dots}, {Yny} are independent and identically distributed, 
+                          and {Xi} and {Yi} are independent of each other. {variance_clause}")
+ 
+    test_statistic <- signif(unname(boot$statistic), 4)
+    pval <- signif(boot$boot.p.value, 4)
+
+    reject <- pval < alpha
+    
+    conclusion <- if (reject) {
+      p(HTML(glue("Since the p-value < 0.05, we reject H₀.
+        There is a significant difference in mean ", clean_label, " 
+        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
+    } else {
+      p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
+        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
+        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
+    }
+    
+    tags$div(
+      class = "hatpc-panel",
+      
+      h4(paste0("Bootstrapping ", test_name)),
+    
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Significance level"),
+        p(paste0(alp, " = ", alpha))
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Hypothesis"),
+        p(paste0("Let x: ", groups[1], " group and y: ", groups[2]), " group."),
+        p(hypothesis)
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Assumptions"),
+        p(HTML(assumptions))
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Test-statistic"),
+        p(paste0("The test statistic is ", test_statistic, "."))
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("p-value"),
+        p(paste0("The bootstrapped p-value is ", pval, ", calculated using ", n, " resamples"))
+      ),
+      
+      tags$div(
+        class = "hatpc-step",
+        tags$strong("Conclusion"),
+        p(conclusion)
+      )
+    )
+  })
+    
   # -------------------------------------------------------
   # QUESTION 3 - RENTAL STATUS vs DATA1X01/DATA2X02 GRADES
   # -------------------------------------------------------
@@ -1253,17 +1390,11 @@ server <- function(input, output) {
   }
   
   render_rent_grade_summary <- function(res, grade_label, B) {
-    
-    # Unicode glyphs used in the write-up
-    mu   <- "μ"   # μ
-    neq  <- "≠"   # ≠
-    dots <- "…"   # …
-    
-    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    hypothesis <- p(HTML(glue("H₀: {muX} = {muY}> <br>
+                              H₁: {muX} {neq} {muY}")))
     
     assumptions <- p(HTML(glue(
-      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
+      "{X1}, {dots} , {Xnx} and {Y1}, {dots} , {Yny} are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
@@ -1322,8 +1453,8 @@ server <- function(input, output) {
     
     ggplot(df_plot, aes(x = val)) +
       geom_histogram(bins = 30, fill = "#69b3a2", color = "white") +
-      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
-      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", linewidth = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", linewidth = 1) +
       labs(
         title = paste0("Null Distribution of Difference in Mean ", grade_label, " Grade\n(Rent: ", res$g1, " vs ", res$g2, ")"),
         x = "Simulated Difference Under Null Hypothesis",
@@ -1396,16 +1527,11 @@ server <- function(input, output) {
     
     B <- input$q3_B
     
-    # Unicode glyphs used in the write-up
-    mu   <- "μ"   # μ
-    neq  <- "≠"   # ≠
-    dots <- "…"   # …
-    
-    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    hypothesis <- p(HTML(glue("H₀: {muX} = {muY}> <br>
+                              H₁: {muX} {neq} {muY}")))
     
     assumptions <- p(HTML(glue(
-      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
+      "{X1}, {dots} , {Xnx} and {Y1}, {dots} , {Yny} are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
