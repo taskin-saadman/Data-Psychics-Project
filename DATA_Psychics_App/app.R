@@ -648,11 +648,7 @@ ui <- fluidPage(
               
               h4("Adjusted Interpretation"),
               
-              uiOutput("q1_cmh_interpretation"),
-              
-              h4("Unadjusted vs Adjusted Comparison"),
-              
-              uiOutput("q1_cmh_comparison")
+              uiOutput("q1_cmh_interpretation")
             )
           )
         ),
@@ -2059,7 +2055,7 @@ server <- function(input, output) {
   # -------------------------------------------------------
   output$q1_cmh_comparison <- renderUI({
     
-    unadjusted_test <- q1_hom_test()
+    
     adjusted_test <- q1_cmh_test()
     
     unadjusted_p <- unadjusted_test$p.value
@@ -2102,7 +2098,6 @@ server <- function(input, output) {
       collapse = "\n"
     )
     
-    hatpc_text_output("Unadjusted vs Adjusted Comparison", result_text)
   })
 }
 

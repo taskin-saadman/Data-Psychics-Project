@@ -5,7 +5,7 @@ account: taskin-saadman
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 17839773
-bundleId: 12536510
+bundleId: 12536567
 url: https://taskin-saadman.shinyapps.io/DATA_Psychics_App/
 version: 1
 asMultiple: FALSE
