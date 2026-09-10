@@ -2,10 +2,6 @@ library(shiny)
 library(tidyverse)
 library(rstatix)
 library(glue)
-library(plotly)
-library(MKinfer)
-library(bslib)
-
 df <- read_csv(
   "DATA2X02_data_cleaned.csv",
   show_col_types = FALSE
@@ -60,35 +56,6 @@ ordinal_choices <- c(
   "DATA1X01 Grade" = "grade_1X01",
   "Aspirational DATA2X02 Grade" = "grade_2X02"
 )
-
-#global constants initialisation
-# Unicode glyphs used in the write-up
-mu   <- "μ"   # μ
-sig  <- "σ"   # σ
-neq  <- "≠"   # ≠
-sim  <- "∼"   # ∼
-dots <- "…"   # …
-alp  <- "α"   # α
-
-# Subscripted sample observations used in the assumptions
-X1  <- "X<sub>1</sub>"
-X2  <- "X<sub>2</sub>"
-Xi  <- "X<sub>i</sub>"
-Xnx <- "X<sub>n<sub>X</sub></sub>"
-Y1  <- "Y<sub>1</sub>"
-Y2  <- "Y<sub>2</sub>"
-Yi  <- "Y<sub>i</sub>"
-Yny <- "Y<sub>n<sub>Y</sub></sub>"
-
-# Distribution parameters used in the assumptions
-muX  <- glue("{mu}<sub>X</sub>")
-muY  <- glue("{mu}<sub>Y</sub>")
-sig2 <- glue("{sig}<sup>2</sup>")
-nX   <- "n<sub>X</sub>"
-nY   <- "n<sub>Y</sub>"
-
-hypothesis <- p(HTML(glue("H₀: {muX} = {muY} <br>
-                              H₁: {muX} {neq} {muY}")))
 
 hatpc_panel <- function(
     hypothesis,
@@ -149,7 +116,7 @@ hatpc_text_output <- function(title, text) {
 }
 
 ui <- fluidPage(
-  theme = bs_theme(version = 5), 
+  
   tags$head(
     tags$link(
       rel = "stylesheet",
@@ -187,11 +154,10 @@ ui <- fluidPage(
           condition = "input.q1_tab == 'introduction'",
           
           p(
-            "The variables for this analysis are initially chosen based on the research question
-            but they can be changed if you wish to see the Chi-Square Test applied on different variables."
+            "The variables for this analysis are fixed by the research question."
           ),
           
-          tags$strong("Variables initially used:"),
+          tags$strong("Variables used:"),
           
           tags$ul(
             tags$li("Course enrolment"),
@@ -259,43 +225,6 @@ ui <- fluidPage(
         ),
         
         conditionalPanel(
-          condition = "input.q1_tab == 'homogeneity'",
-          
-          hatpc_panel(
-            hypothesis = tagList(
-              p("H₀: The distribution of paid employment status is the same for DATA2002 and DATA2902 students."),
-              p("H₁: The distribution of paid employment status differs between the two courses."),
-              p("This compares the proportion of employed and non-employed students across the two course groups.")
-            ),
-            
-            assumptions = tagList(
-              p("Observations are independent: each row represents an individual student's survey response."),
-              p("Course enrolment defines the groups, while employment status is the categorical response being compared."),
-              p("Expected cell counts must be sufficiently large for the chi-square approximation.")
-            ),
-            
-            test_statistic = tagList(
-              p("Pearson's χ² statistic measures how far the observed employment counts in each course differ from the counts expected if both courses had the same employment distribution."),
-              uiOutput("q1_hom_hatpc_stat")
-            ),
-            
-            p_value = uiOutput("q1_hom_hatpc_p"),
-            
-            conclusion = p(
-              "If p < 0.05, reject H₀ and conclude that the employment distribution differs between DATA2002 and DATA2902 students. Otherwise, fail to reject H₀."
-            )
-          ),
-          
-          tags$hr(),
-          
-          tags$strong("Chi-square Test of Homogeneity"),
-          
-          p(
-            "Compares the distribution of employment status across courses."
-          )
-        ),
-        
-        conditionalPanel(
           condition = "input.q1_tab == 'cmh'",
           
           hatpc_panel(
@@ -355,7 +284,10 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
         
-        h4("Variable Selection"),
+        #conditionalPanel(
+        #  condition = "input.q2_tab == 'two_sample_q2'",
+        
+        h4("Two Sample Mean Test Options"),
         p("Please choose one grouping variable and one numerical/ordinal variable."),
         
         selectInput(
@@ -394,14 +326,6 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question3'",
         
-        conditionalPanel(
-          condition = "input.q3_tab == 'intro_q3'",
-          
-          p(
-            "No inputs need to be selected for this tab."
-          )
-        ),
-          
         conditionalPanel(
           condition = "input.q3_tab == 'q3_perm_rent'",
           
@@ -461,113 +385,106 @@ ui <- fluidPage(
           value = "intro",
           
           h2("Research Motivation"),
-          p("As university students, we feel the pressure of needing to balance our 
-          university life with our personal life. 
-          Factors like having a part/full-time job, long commute, or not getting 
-          enough sleep each night can add pressure and affect academic performance. 
-          The same is true in the other direction, as academic pressures can spill 
-          over into our personal lives, influencing lifestyle choices and 
-          sometimes leading to reduced self‑care, such as irregular sleep patterns 
-          or even forgetting basic habits like drinking enough water. "),
-          p("Hence, we created this app to investigate how different lifestyle 
-          factors are associated with academic performance, and vice versa. 
-          By performing relevant statistical tests, our findings may assist the 
-          student support services at University of Sydney to move toward earlier, 
-          more targeted support for students who may be struggling."),
+          p(
+            "We explore how lifestyle factors such as employment, rent and sleep ",
+            "relate to students' academic performance and course enrolment, ",
+            "to help inform student support."
+          ),
           
-          h2("Data Description"),
-          p("The dataset was collected through a voluntary survey of students enrolled 
-          in the University of Sydney's DATA2002 and DATA2902 units in semester 2, 2026.
-          Originally collected for the unit's research regarding  syllabus design and student learning pathways, the
-          data was made available to students in completion of the first group project.
-          Students were encouraged to complete the survey during the first lecture, as well as allocated workshop hours, 
-          which helped maximise participation and to gather a more accurate representation of the cohort."),
-          
-          p("Once cleaned and deidentified, the dataset contains 673 responses across 
-            23 variables, which can be categorised into 3 main groups:"),
-          tags$ol(
+          h2("Data Overview"),
+          tags$ul(
             tags$li(
-              tags$strong("Demographic and Lifestyle: "),
-              tags$br(),
-              "Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week), hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, and favourite music genre."
+              tags$strong("Source: "),
+              "Voluntary survey of University of Sydney DATA2002 and DATA2902 ",
+              "students in Semester 2, 2026."
             ),
-            tags$br(),
             tags$li(
-              tags$strong("Academic Background and Study Behaviour: "),
-              tags$br(),
-              "Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, grade hoped for in DATA2002/2902, typical approach to assessments (e.g. gradually, crammed, immediately), and commute time to campus in minutes."
+              tags$strong("Cleaned dataset: "),
+              "673 responses across 23 variables."
             ),
-            tags$br(),
             tags$li(
-              tags$strong("Weekly learning choices: "),
-              tags$br(),
-              "The learning pathway and lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice. 
-              It also included a boolean response on whether the student multi-tasks during lectures, what tasks they do, and why."
+              tags$strong("Main topics: "),
+              "Demographics and lifestyle, academic background, ",
+              "study behaviour and weekly learning choices."
             )
           ),
+          
           h2("Limitations and Biases"),
-          p("This dataset provided can not be considered a random sample as it more 
-          closely resembles a census-style survey with voluntary participation. 
-          Every student enrolled in DATA2X02 was invited to participate rather than a randomly
-          sampled group of university students. This limits the generalisability of the 
-          project's findings towards the overall population of USYD students. However,
-          this does not diminish the value of analysis conducted on the DATA2X02 cohort itself.
-          While not generalisable, it still offers meaningful insights into this specific group and can
-          serve as a useful pilot study/proof-of-concept for future research employing
-          more rigorous random sampling methods."),
-          
-          p("Following that, however, the sample exhibits voluntary response bias, 
-          given that participation in the survey was left to the students' discretion,
-          likely drawing in inidivduals with stronger views or particular characteristics.
-          In contrast, non-response bias may also be present, which is when students
-          who did not complete the survey differ in meaningful way from the respondents,
-          reducing the represantiveness of the full DATA2X02 cohort."),
-          
-          p("Keeping these limitations in mind, we will avoid making claims about 
-            the broader USYD population and interpret our results only within the 
-            context of this specific DATA2X02 cohort. This approach helps mitigate 
-            the impact of the sampling limitations and ensures our explanations 
-            remain appropriately cautious."),
-          
-          h2("Data Processing"),
-          h3("Critique of Survey Questions"),
-          p(
-            "The survey also contained inconsistencies in how key variables were recorded, particularly in the use of both numerical and Boolean formats for some items but not others.
-            For example, rent was assessed through a numerical amount and a separate yes/no question, whereas employment was captured solely through weekly hours. 
-            This uneven structure resulted in contradictory entries that needed to be fixed later on \"no\" rent paired with a positive rent value, or vice versa. 
-            Future surveys would benefit from standardising the response format to one numerical field with instructions to leave non‑applicable items at 0 would improve clarity and data reliability."
+          tags$ul(
+            tags$li(
+              "All enrolled students were invited, but participation was voluntary. ",
+              "Respondents may differ from non-respondents, creating voluntary ",
+              "response and non-response bias."
+            ),
+            tags$li(
+              "Findings describe the surveyed cohort and cannot be assumed ",
+              "to represent all University of Sydney students."
+            ),
+            tags$li(
+              "The survey identifies associations; it does not establish causation."
+            )
           ),
           
-          p(
-            "Additionally, students were allowed to select “Other” instead of the three provided workflow groups, but the survey did not include a space for them to describe what they actually do. 
-            This makes “Other” responses ambiguous and limits their usefulness. A simple free‑text field would have helped capture more accurate and meaningful distinctions among students’ assessment habits."
+          h2("Survey Questions Needing Improvement"),
+          tags$ul(
+            tags$li(
+              tags$strong("Rent status and amount: "),
+              "Separate yes/no and numerical questions allowed contradictory ",
+              "answers, such as reporting no rent but entering a positive amount. ",
+              "Use one clearly labelled weekly rent field, instruct students ",
+              "to enter 0 if they pay no rent, and distinguish missing responses ",
+              "from zero."
+            ),
+            tags$li(
+              tags$strong("Assessment workflow: "),
+              "The 'Other' option had no follow-up text field, so students' ",
+              "actual workflows could not be identified or reliably grouped. ",
+              "Add an 'Other: please specify' field to capture these differences."
+            )
           ),
           
-          h3("Data Cleaning"),
-          p(
-            "The column names of the dataset were standardised to summarise the recorded value.
-           All categorical variables were factorised to ensure proper representation in R, including students' grades for DATA1X01 and DATA2X02, which encoded as ordered factors.
-            A Boolean employment variable was created to indicate whether a student had spent any time in employment during the past week, with values above zero coded as yes and zero coded as no."
-          ),
-          p(
-            "The dataset was then subsetted to only include variables relevant to the research question on student lifestyle and academic factors, improving computational efficiency.
-            The Boolean rent and multitasking variables were reprocessed to prevent misaligned records: rent values above zero were coded as yes, while zero values were coded as no.
-            For multitasking, inconsistencies were corrected where students claimed to multitask but provided no task entries, or conversely, provided entries but selected no."
-          ),
-          
-          p(
-            "Unrealistic numerical values were also filtered out, such as travelling for more than 4 hours daily to reach to campus,
-            spending more than 1.5 × 38 hours per week in employment (38 hours a week is the weekly limit for full-time work (Fair Work Ombudsman (n.d.)),
-            with extra allotted hours to allow reasonable flexibility for part-time work), or recording implausible sleep durations
-            such as more than 20 hours (substantially exceeds normal adult and most clinical hypersomnia ranges (Bollu et al., 2018), or exactly zero hours a day.
-            Although a subset of observations reported water consumption values far above the typical range, manual inspection indicated no inconsistencies in the accompanying data.
-            Given the plausibility of genuine high intake, such as due to medical or lifestyle factors, these observations were retained. 
-            Similarly, entries reporting 0 litres of daily water consumption were retained, as it may reflect individuals who hydrate through other beverages."
-          ),
-          
-          p(
-            "Lastly, a new grouping column was created to classify assessment workflow patterns as as either consistent (gradually and immediately) or inconsistent (crammed and other),
-            primarily for two-sample mean comparison analyses."
+          h2("Data Cleaning"),
+          tags$ol(
+            tags$li(
+              tags$strong("Standardised structure: "),
+              "Renamed columns for clarity, retained variables relevant to the ",
+              "research questions and converted categorical variables to factors. ",
+              "In the app, grades were coded in order: P = 1, CR = 2, D = 3 and HD = 4."
+            ),
+            tags$li(
+              tags$strong("Derived employment status: "),
+              "Coded positive weekly employment hours as 'yes' and zero hours ",
+              "as 'no'. This measures whether students worked that week; ",
+              "zero hours does not necessarily mean they had no job."
+            ),
+            tags$li(
+              tags$strong("Reconciled inconsistent responses: "),
+              "Recoded rent status using the reported amount: positive rent ",
+              "as 'yes' and zero as 'no'. Checked multitasking answers against ",
+              "the listed activities and reconciled conflicting entries."
+            ),
+            tags$li(
+              tags$strong("Filtered numerical values: "),
+              "Applied the project's screening thresholds to exclude reported ",
+              "commutes above 4 hours, employment above 57 hours per week, ",
+              "and sleep of zero or above 20 hours per day. These were cleaning ",
+              "decisions intended to flag potentially unreliable responses, ",
+              "rather than universal limits on possible behaviour."
+            ),
+            tags$li(
+              tags$strong("Retained unusual water values: "),
+              "Kept high reported water intake after manual review found no ",
+              "supporting inconsistencies. Also retained zero intake because ",
+              "students may consume other beverages; an unusual value alone ",
+              "was not treated as an error."
+            ),
+            tags$li(
+              tags$strong("Grouped assessment workflows: "),
+              "Combined 'gradually' and 'immediately' as 'consistent', and ",
+              "'crammed' and 'other' as 'inconsistent' for two-sample comparisons. ",
+              "This grouping is a simplifying assumption: unspecified 'Other' ",
+              "responses may not represent inconsistent study habits."
+            )
           )
         ),
         
@@ -609,10 +526,7 @@ ui <- fluidPage(
                   "unadjusted association between course enrolment and paid ",
                   "employment status."
                 ),
-                tags$li(
-                  "A chi-square test of homogeneity provides the equivalent ",
-                  "homogeneity interpretation of the same contingency table."
-                ),
+                
                 tags$li(
                   "A Cochran-Mantel-Haenszel chi-square test examines the ",
                   "course-employment association while controlling for ",
@@ -657,37 +571,6 @@ ui <- fluidPage(
               uiOutput("q1_ind_interpretation")
             ),
             
-            tabPanel(
-              title = "Chi-square Homogeneity",
-              value = "homogeneity",
-              
-              h4("Chi-square Test of Homogeneity"),
-              
-              p(
-                "This test examines whether the distribution of employment ",
-                "status is homogeneous across DATA2002 and DATA2902."
-              ),
-              
-              h4("Observed Counts"),
-              
-              tableOutput("q1_hom_table"),
-              
-              h4("Employment Proportions by Course"),
-              
-              tableOutput("q1_hom_proportions"),
-              
-              h4("Test Result"),
-              
-              uiOutput("q1_chi_homogeneity"),
-              
-              h4("Chi-square Distribution"),
-              
-              plotOutput("q1_hom_chisq_plot"),
-              
-              h4("Interpretation"),
-              
-              uiOutput("q1_hom_interpretation")
-            ),
             
             tabPanel(
               title = "CMH Chi-square",
@@ -744,14 +627,14 @@ ui <- fluidPage(
               p("To evaluate the research question based on the selected variables, 
                 our program detects which two sample test is most suitable following the assumptions:"),
               
-              h5("Student's Two Sample T-Test"),
+              h5("Student Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
                 tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
                 tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),
               
-              h5("Welch's Two Sample T-Test"),
+              h5("Welch Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
@@ -766,14 +649,14 @@ ui <- fluidPage(
                 If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
                 For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
               
-              p("If you feel unconfident with the normality assumption through CLT for the numerical variables, you can try perform
-                bootstrapping to resample the data."),
-              
               p(HTML("<b> Note: </b>Please do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
                 numerical variable, or \"Employment Status (y/n)\" as grouping variable and
                 \"Employment Hours (hours)\" as numerical variable. This is because the \"no\" group for
                 both grouping variables correspond to a numerical value of zero in the corresponding
-                numerical variable."))
+                numerical variable.")),
+              
+              h4("Significance Level"),
+              p("All hypothesis tests use a significance level of α = 0.05."),
             ),
             
             #second tabset
@@ -794,7 +677,7 @@ ui <- fluidPage(
                 p("The violin and box plots show the shape of each group's distribution, as well as
                   the median, interquartile range and outliers. Comparing the widths of the two
                   violins gives a visual check of the equal variance assumption."),
-                plotlyOutput("q2_violin_box"),
+                plotOutput("q2_violin_box"),
                 
                 h4("Levene's test of equal variance"),
                 p("Levene's test gives a numerical value to the equality of variances between two
@@ -820,30 +703,10 @@ ui <- fluidPage(
               value = "two_sample_q2",
               
               plotOutput("out2_graph"),
-              
-              accordion(
-                open = FALSE,
-                accordion_panel(
-                  "Two Sample Test",
-                  uiOutput("out2_test")
-                )
-              ), 
-              
-              conditionalPanel(
-                condition = "input.yvar_type == 'Numerical'",
-                checkboxInput("checkbox_q2", "Perform Bootstrapping?", FALSE), 
-                conditionalPanel(
-                  condition = "input.checkbox_q2 == true",
-                  sliderInput("slider_q2", "Range:",
-                            min = 10, max = 1000,
-                            value = 100,
-                            width = "90%"),
-                  uiOutput("out2_bootstrap")
-              )
+              uiOutput("out2_test")
             )
           )
-        )
-      ),
+        ),
         
         tabPanel(
           title = "QUESTION 3",
@@ -926,6 +789,8 @@ ui <- fluidPage(
           p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
           
           h4("References"),
+          p("Insert any references in APA 7th format that was used for this report, including coding references"),
+          
           p("Australian Government. (n.d.). Hours of work. Fair Work Ombudsman. Retrieved 2 September 2026, from https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work"),
           p("Bollu, P. C., Manjamalai, S., Thakkar, M., & Sahota, P. (2018). Hypersomnia. Missouri Medicine, 115(1), 85–91.")
         )
@@ -1029,13 +894,13 @@ server <- function(input, output) {
     )
   })
   
-  output$q2_violin_box <- renderPlotly({
+  output$q2_violin_box <- renderPlot({
     d <- q2_plot_data()
     labs_q2 <- q2_plot_labels()
     
-    p <- ggplot(d, aes(x = group, y = value, fill = group)) +
-      geom_violin(width = 1.0, colour = "#e9ecef", alpha = 0.8) +
-      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", outlier.size = 1) +
+    ggplot(d, aes(x = group, y = value, fill = group)) +
+      geom_violin(width = 1.0, colour = "#e9ecef") +
+      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", alpha = 0.9, outlier.size = 1) +
       scale_fill_manual(values = c("#69b3a2", "#404080")) +
       labs(
         title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
@@ -1043,8 +908,6 @@ server <- function(input, output) {
         y = labs_q2$value) +
       theme_minimal() +
       theme(legend.position = "none")
-    
-    ggplotly(p, tooltip = c("text")) |> plotly::style(hoverinfo = "none", traces = 1:2)
   })
   
   
@@ -1058,7 +921,7 @@ server <- function(input, output) {
     labs_q2 <- q2_plot_labels()
     
     df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
-      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity')
+      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
        else geom_bar(color="#e9ecef", position = 'identity')) +
       scale_fill_manual(values=c("#69b3a2", "#404080")) +
       labs(fill="",
@@ -1070,10 +933,41 @@ server <- function(input, output) {
   })
   
   output$out2_test <- renderUI({
+    
     alpha <- 0.05
     
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    sig  <- "σ"   # σ
+    neq  <- "≠"   # ≠
+    sim  <- "∼"   # ∼
+    dots <- "…"   # …
+    alp  <- "α"   # α
+    
+    # Subscripted sample observations used in the assumptions
+    X1  <- "X<sub>1</sub>"
+    X2  <- "X<sub>2</sub>"
+    Xi  <- "X<sub>i</sub>"
+    Xnx <- "X<sub>n<sub>X</sub></sub>"
+    Y1  <- "Y<sub>1</sub>"
+    Y2  <- "Y<sub>2</sub>"
+    Yi  <- "Y<sub>i</sub>"
+    Yny <- "Y<sub>n<sub>Y</sub></sub>"
+    
+    # Distribution parameters used in the assumptions
+    muX  <- glue("{mu}<sub>X</sub>")
+    muY  <- glue("{mu}<sub>Y</sub>")
+    sig2 <- glue("{sig}<sup>2</sup>")
+    nX   <- "n<sub>X</sub>"
+    nY   <- "n<sub>Y</sub>"
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    
     xvar <- input$drop2_xvar
+    
     groups <- levels(df[[xvar]])
+    
     grouping_var <- names(nominal_choices)[nominal_choices == xvar]
     
     #identify which raw name was selected based on the active radio button
@@ -1082,7 +976,6 @@ server <- function(input, output) {
     #combine lists to map backend name back to its display label
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
-    
     
     if (input$yvar_type == "Numerical") {
       
@@ -1133,7 +1026,7 @@ server <- function(input, output) {
         }
         
         variance_clause <- glue(
-          "Using Levene's test, as p-value = {lev} is greater than 0.05, X and Y have similar ",
+          "Using Levene's test, as {lev} is greater than 0.05, X and Y have similar ",
           "variances and the Student's t-test is used."
         )
         
@@ -1142,7 +1035,7 @@ server <- function(input, output) {
         indep_clause <- glue("{Xi} and {Yi} are independent and have equal variance.")
         
         variance_clause <- glue(
-          "Using Levene's test, as p-value = {lev} is less than 0.05, X and Y have different ",
+          "Using Levene's test, as {lev} is less than 0.05, X and Y have different ",
           "variances and the Welch's t-test is used."
         )
       }
@@ -1250,115 +1143,6 @@ server <- function(input, output) {
     )
   })
   
-  output$out2_bootstrap <- renderUI({
-    alpha <- 0.05
-    xvar <- q2_xvar()
-    groups <- levels(df[[xvar]])
-    
-    grouping_var <- names(nominal_choices)[nominal_choices == xvar]
-    
-    #identify which raw name was selected based on the active radio button
-    yvar <- q2_yvar()
-    
-    #combine lists to map backend name back to its display label
-    all_choices <- c(numeric_choices, ordinal_choices)
-    clean_label <- names(all_choices)[all_choices == yvar]
-    
-    n <- input$slider_q2
-    
-    f <- as.formula(
-      paste(yvar, "~", xvar)
-    )
-    
-    p_equal_var <- levene_test(
-      f,
-      data = df) %>%
-      pull(p)
-    
-    lev  <- signif(p_equal_var, 4)
-    
-    if (p_equal_var < alpha) {
-      test_name <- "Welch's t-test"
-      boot <- boot.t.test(formula = f, data = df, 
-                          alternative = "two.sided",
-                          mu = 0, paired = FALSE, var.equal = FALSE,
-                          conf.level = 0.95, R = n)
-      variance_clause <- glue(
-        "Using Levene's test, as p-value = {lev} is less than 0.05, X and Y have different ",
-        "variances and the Welch's t-test is used.")
-      } else {
-      test_name <- "Student's t-test"
-      boot <- boot.t.test(formula = f, data = df, 
-                          alternative = "two.sided",
-                          mu = 0, paired = FALSE, var.equal = TRUE,
-                          conf.level = 0.95, R = n)
-      variance_clause <- glue(
-        "Using Levene's test, as p-value = {lev} is greater than 0.05, X and Y have similar ",
-        "variances and the Student's t-test is used.")}
-
-    assumptions <- glue(" {X1}, {X2}, {dots}, {Xnx} are independent and identically distributed, 
-                          {Y1}, {Y2}, {dots}, {Yny} are independent and identically distributed, 
-                          and {Xi} and {Yi} are independent of each other. {variance_clause}")
- 
-    test_statistic <- signif(unname(boot$statistic), 4)
-    pval <- signif(boot$boot.p.value, 4)
-
-    reject <- pval < alpha
-    
-    conclusion <- if (reject) {
-      p(HTML(glue("Since the p-value < 0.05, we reject H₀.
-        There is a significant difference in mean ", clean_label, " 
-        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
-    } else {
-      p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
-        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
-        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
-    }
-    
-    tags$div(
-      class = "hatpc-panel",
-      
-      h4(paste0("Bootstrapping ", test_name)),
-    
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Significance level"),
-        p(paste0(alp, " = ", alpha))
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Hypothesis"),
-        p(paste0("Let x: ", groups[1], " group and y: ", groups[2]), " group."),
-        p(hypothesis)
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Assumptions"),
-        p(HTML(assumptions))
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Test-statistic"),
-        p(paste0("The test statistic is ", test_statistic, "."))
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("p-value"),
-        p(paste0("The bootstrapped p-value is ", pval, ", calculated using ", n, " resamples"))
-      ),
-      
-      tags$div(
-        class = "hatpc-step",
-        tags$strong("Conclusion"),
-        p(conclusion)
-      )
-    )
-  })
-    
   # -------------------------------------------------------
   # QUESTION 3 - RENTAL STATUS vs DATA1X01/DATA2X02 GRADES
   # -------------------------------------------------------
@@ -1390,11 +1174,17 @@ server <- function(input, output) {
   }
   
   render_rent_grade_summary <- function(res, grade_label, B) {
-    hypothesis <- p(HTML(glue("H₀: {muX} = {muY}> <br>
-                              H₁: {muX} {neq} {muY}")))
+    
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    neq  <- "≠"   # ≠
+    dots <- "…"   # …
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
     assumptions <- p(HTML(glue(
-      "{X1}, {dots} , {Xnx} and {Y1}, {dots} , {Yny} are independent random samples. ",
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
@@ -1453,8 +1243,8 @@ server <- function(input, output) {
     
     ggplot(df_plot, aes(x = val)) +
       geom_histogram(bins = 30, fill = "#69b3a2", color = "white") +
-      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", linewidth = 1) +
-      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", linewidth = 1) +
+      geom_vline(xintercept = res$obs_diff, color = "red", linetype = "dashed", size = 1) +
+      geom_vline(xintercept = -res$obs_diff, color = "red", linetype = "dashed", size = 1) +
       labs(
         title = paste0("Null Distribution of Difference in Mean ", grade_label, " Grade\n(Rent: ", res$g1, " vs ", res$g2, ")"),
         x = "Simulated Difference Under Null Hypothesis",
@@ -1527,11 +1317,16 @@ server <- function(input, output) {
     
     B <- input$q3_B
     
-    hypothesis <- p(HTML(glue("H₀: {muX} = {muY}> <br>
-                              H₁: {muX} {neq} {muY}")))
+    # Unicode glyphs used in the write-up
+    mu   <- "μ"   # μ
+    neq  <- "≠"   # ≠
+    dots <- "…"   # …
+    
+    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
+                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
     
     assumptions <- p(HTML(glue(
-      "{X1}, {dots} , {Xnx} and {Y1}, {dots} , {Yny} are independent random samples. ",
+      "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
       "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
       "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
     
@@ -1937,202 +1732,6 @@ server <- function(input, output) {
   })
   
   
-  # -------------------------------------------------------
-  # QUESTION 1 - CHI-SQUARE HOMOGENEITY
-  # -------------------------------------------------------
-  q1_hom_table <- reactive({
-    
-    table(
-      df$type_2X02,
-      df$employment_y_n,
-      dnn = c("Course enrolment", "Employment status")
-    )
-  })
-  
-  
-  q1_hom_test <- reactive({
-    
-    chisq.test(
-      q1_hom_table(),
-      correct = FALSE
-    )
-  })
-  
-  
-  output$q1_hom_table <- renderTable({
-    q1_hom_table()
-  }, rownames = TRUE)
-  
-  
-  output$q1_hom_proportions <- renderTable({
-    
-    round(
-      prop.table(
-        q1_hom_table(),
-        margin = 1
-      ),
-      3
-    )
-    
-  }, rownames = TRUE)
-  
-  
-  output$q1_chi_homogeneity <- renderUI({
-    result_text <- paste(capture.output(print(q1_hom_test())), collapse = "\n")
-    hatpc_text_output("Chi-square Test of Homogeneity", result_text)
-  })
-  
-  
-  output$q1_hom_hatpc_stat <- renderUI({
-    test <- q1_hom_test()
-    
-    p(
-      paste0(
-        "χ² = ",
-        round(unname(test$statistic), 3)
-      )
-    )
-  })
-  
-  
-  output$q1_hom_hatpc_p <- renderUI({
-    test <- q1_hom_test()
-    
-    p(
-      paste0(
-        "p = ",
-        format.pval(
-          test$p.value,
-          digits = 4,
-          eps = 0.0001
-        )
-      )
-    )
-  })
-  
-  
-  output$q1_hom_chisq_plot <- renderPlot({
-    
-    test <- q1_hom_test()
-    
-    df_chi <- unname(test$parameter)
-    stat <- unname(test$statistic)
-    p_value <- test$p.value
-    
-    x_max <- max(
-      qchisq(0.999, df = df_chi),
-      stat * 1.15
-    )
-    
-    x <- seq(
-      0.01,
-      x_max,
-      length.out = 1000
-    )
-    
-    y <- dchisq(
-      x,
-      df = df_chi
-    )
-    
-    plot(
-      x,
-      y,
-      type = "l",
-      lwd = 2,
-      xlab = expression(chi^2),
-      ylab = "Density",
-      main = paste(
-        "Chi-square Distribution (df =",
-        df_chi,
-        ")"
-      )
-    )
-    
-    tail_x <- seq(
-      stat,
-      x_max,
-      length.out = 500
-    )
-    
-    tail_y <- dchisq(
-      tail_x,
-      df = df_chi
-    )
-    
-    polygon(
-      c(stat, tail_x, x_max),
-      c(0, tail_y, 0),
-      col = adjustcolor(
-        "red",
-        alpha.f = 0.25
-      ),
-      border = NA
-    )
-    
-    lines(
-      x,
-      y,
-      lwd = 2
-    )
-    
-    abline(
-      v = stat,
-      col = "red",
-      lty = 2,
-      lwd = 2
-    )
-    
-    legend(
-      "topright",
-      legend = c(
-        paste0("Observed χ² = ", round(stat, 3)),
-        paste0("Right-tail p = ", format.pval(p_value, digits = 4))
-      ),
-      lty = c(2, NA),
-      lwd = c(2, NA),
-      col = c("red", NA),
-      bty = "n"
-    )
-  })
-  
-  
-  output$q1_hom_interpretation <- renderUI({
-    
-    test <- q1_hom_test()
-    p_value <- test$p.value
-    
-    conclusion_line <- if (p_value < 0.05) {
-      paste0(
-        "Conclusion: At α = 0.05, we reject the null hypothesis. ",
-        "There is statistically significant evidence that the distribution of paid employment status ",
-        "is not homogeneous across DATA2002 and DATA2902 students."
-      )
-    } else {
-      paste0(
-        "Conclusion: At α = 0.05, we fail to reject the null hypothesis. ",
-        "There is insufficient evidence that the distribution of paid employment status ",
-        "differs between DATA2002 and DATA2902 students."
-      )
-    }
-    
-    result_text <- paste(
-      c(
-        "Null hypothesis: The distribution of paid employment status is the same for DATA2002 and DATA2902 students.",
-        "",
-        "Alternative hypothesis: The distribution of paid employment status differs between DATA2002 and DATA2902 students.",
-        "",
-        paste0("Chi-square statistic: ", round(unname(test$statistic), 3)),
-        paste0("Degrees of freedom: ", unname(test$parameter)),
-        paste0("P-value: ", format.pval(p_value, digits = 4, eps = 0.0001)),
-        "",
-        conclusion_line
-      ),
-      collapse = "\n"
-    )
-    
-    hatpc_text_output("Interpretation", result_text)
-  })
   
   
   # -------------------------------------------------------
