@@ -384,106 +384,156 @@ ui <- fluidPage(
           title = "INTRODUCTION",
           value = "intro",
           
-          h2("Research Motivation"),
-          p(
-            "We explore how lifestyle factors such as employment, rent and sleep ",
-            "relate to students' academic performance and course enrolment, ",
-            "to help inform student support."
-          ),
-          
-          h2("Data Overview"),
-          tags$ul(
-            tags$li(
-              tags$strong("Source: "),
-              "Voluntary survey of University of Sydney DATA2002 and DATA2902 ",
-              "students in Semester 2, 2026."
+          tabsetPanel(
+            id = "intro_tab",
+            
+            tabPanel(
+              title = "Motivation",
+              value = "intro_motivation",
+              
+              h2("Research Motivation"),
+              p(
+                "Balancing study, paid work and personal wellbeing can be challenging. ",
+                "This app explores how employment, rent, sleep and other lifestyle ",
+                "factors relate to academic performance and course enrolment. ",
+                "These findings may help identify areas for student support."
+              )
             ),
-            tags$li(
-              tags$strong("Cleaned dataset: "),
-              "673 responses across 23 variables."
+            
+            tabPanel(
+              title = "Dataset",
+              value = "intro_dataset",
+              
+              h2("Dataset and Context"),
+              tags$ul(
+                tags$li(
+                  tags$strong("Source: "),
+                  "A voluntary survey of University of Sydney DATA2002 and DATA2902 ",
+                  "students in Semester 2, 2026, collected to inform syllabus design ",
+                  "and student learning pathways and supplied for this group project."
+                ),
+                tags$li(
+                  tags$strong("Collection: "),
+                  "Students were invited to participate during the first lecture ",
+                  "and allocated workshop time."
+                ),
+                tags$li(
+                  tags$strong("Cleaned dataset: "),
+                  "673 deidentified responses across 23 variables."
+                ),
+                tags$li(
+                  tags$strong("Main topics: "),
+                  "Demographics and lifestyle, academic background and study behaviour, ",
+                  "and weekly learning choices."
+                )
+              )
             ),
-            tags$li(
-              tags$strong("Main topics: "),
-              "Demographics and lifestyle, academic background, ",
-              "study behaviour and weekly learning choices."
-            )
-          ),
-          
-          h2("Limitations and Biases"),
-          tags$ul(
-            tags$li(
-              "All enrolled students were invited, but participation was voluntary. ",
-              "Respondents may differ from non-respondents, creating voluntary ",
-              "response and non-response bias."
+            
+            tabPanel(
+              title = "Sampling and Biases",
+              value = "intro_biases",
+              
+              h2("Sampling and Potential Biases"),
+              p(
+                tags$strong("This is not a random sample. "),
+                "All enrolled DATA2X02 students were invited, but individuals chose ",
+                "whether to respond. This was an attempted census of the cohort with ",
+                "voluntary participation, rather than random selection."
+              ),
+              tags$ul(
+                tags$li(
+                  tags$strong("Voluntary response bias: "),
+                  "Students with stronger opinions or greater engagement may have ",
+                  "been more willing to participate, overrepresenting their experiences."
+                ),
+                tags$li(
+                  tags$strong("Non-response bias: "),
+                  "Students who did not respond may differ systematically from respondents. ",
+                  "For example, students with heavier work commitments may have had less ",
+                  "time to complete the survey, potentially underrepresenting their experiences."
+                )
+              ),
+              p(
+                "These are potential biases, not confirmed differences. Results should ",
+                "be interpreted within the surveyed cohort and cannot be assumed to ",
+                "represent all University of Sydney students. Associations do not ",
+                "establish cause and effect."
+              )
             ),
-            tags$li(
-              "Findings describe the surveyed cohort and cannot be assumed ",
-              "to represent all University of Sydney students."
+            
+            tabPanel(
+              title = "Survey Improvements",
+              value = "intro_survey",
+              
+              h2("Survey Questions Needing Improvement"),
+              tags$ul(
+                tags$li(
+                  tags$strong("Rent status and amount: "),
+                  "Separate yes/no and numerical questions allowed contradictory answers, ",
+                  "such as selecting 'no' while reporting positive rent. ",
+                  tags$strong("Improvement: "),
+                  "Use one clearly labelled weekly rent field with instructions to enter ",
+                  "0 when no rent is paid, keeping missing responses distinct from zero."
+                ),
+                tags$li(
+                  tags$strong("Assessment workflow: "),
+                  "The 'Other' option lacked a follow-up text field, making these ",
+                  "responses ambiguous and difficult to classify. ",
+                  tags$strong("Improvement: "),
+                  "Add an 'Other: please specify' field so students can describe ",
+                  "workflows not covered by the listed options."
+                )
+              )
             ),
-            tags$li(
-              "The survey identifies associations; it does not establish causation."
-            )
-          ),
-          
-          h2("Survey Questions Needing Improvement"),
-          tags$ul(
-            tags$li(
-              tags$strong("Rent status and amount: "),
-              "Separate yes/no and numerical questions allowed contradictory ",
-              "answers, such as reporting no rent but entering a positive amount. ",
-              "Use one clearly labelled weekly rent field, instruct students ",
-              "to enter 0 if they pay no rent, and distinguish missing responses ",
-              "from zero."
-            ),
-            tags$li(
-              tags$strong("Assessment workflow: "),
-              "The 'Other' option had no follow-up text field, so students' ",
-              "actual workflows could not be identified or reliably grouped. ",
-              "Add an 'Other: please specify' field to capture these differences."
-            )
-          ),
-          
-          h2("Data Cleaning"),
-          tags$ol(
-            tags$li(
-              tags$strong("Standardised structure: "),
-              "Renamed columns for clarity, retained variables relevant to the ",
-              "research questions and converted categorical variables to factors. ",
-              "In the app, grades were coded in order: P = 1, CR = 2, D = 3 and HD = 4."
-            ),
-            tags$li(
-              tags$strong("Derived employment status: "),
-              "Coded positive weekly employment hours as 'yes' and zero hours ",
-              "as 'no'. This measures whether students worked that week; ",
-              "zero hours does not necessarily mean they had no job."
-            ),
-            tags$li(
-              tags$strong("Reconciled inconsistent responses: "),
-              "Recoded rent status using the reported amount: positive rent ",
-              "as 'yes' and zero as 'no'. Checked multitasking answers against ",
-              "the listed activities and reconciled conflicting entries."
-            ),
-            tags$li(
-              tags$strong("Filtered numerical values: "),
-              "Applied the project's screening thresholds to exclude reported ",
-              "commutes above 4 hours, employment above 57 hours per week, ",
-              "and sleep of zero or above 20 hours per day. These were cleaning ",
-              "decisions intended to flag potentially unreliable responses, ",
-              "rather than universal limits on possible behaviour."
-            ),
-            tags$li(
-              tags$strong("Retained unusual water values: "),
-              "Kept high reported water intake after manual review found no ",
-              "supporting inconsistencies. Also retained zero intake because ",
-              "students may consume other beverages; an unusual value alone ",
-              "was not treated as an error."
-            ),
-            tags$li(
-              tags$strong("Grouped assessment workflows: "),
-              "Combined 'gradually' and 'immediately' as 'consistent', and ",
-              "'crammed' and 'other' as 'inconsistent' for two-sample comparisons. ",
-              "This grouping is a simplifying assumption: unspecified 'Other' ",
-              "responses may not represent inconsistent study habits."
+            
+            tabPanel(
+              title = "Data Cleaning",
+              value = "intro_cleaning",
+              
+              h2("Data Cleaning Process"),
+              tags$ol(
+                tags$li(
+                  tags$strong("Standardised variables: "),
+                  "Renamed columns for clarity and retained variables relevant to ",
+                  "the research questions. Categorical variables were converted to ",
+                  "factors; the app codes grades as P = 1, CR = 2, D = 3 and HD = 4 ",
+                  "to preserve their ranking."
+                ),
+                tags$li(
+                  tags$strong("Created employment status: "),
+                  "Positive weekly employment hours were coded as 'yes' and zero ",
+                  "hours as 'no'. This indicates whether a student worked that week; ",
+                  "zero hours does not necessarily imply that they had no job."
+                ),
+                tags$li(
+                  tags$strong("Reconciled inconsistent answers: "),
+                  "Rent status was recoded from the reported amount: positive values ",
+                  "became 'yes' and zero became 'no'. Conflicting multitasking responses ",
+                  "were checked and reconciled against the activities students listed."
+                ),
+                tags$li(
+                  tags$strong("Screened numerical responses: "),
+                  "Applied project-defined filters for reported commute times above ",
+                  "4 hours, employment above 57 hours per week, and sleep of zero ",
+                  "or above 20 hours per day. These thresholds aimed to screen ",
+                  "potentially unreliable responses, but may also exclude genuine ",
+                  "extreme values."
+                ),
+                tags$li(
+                  tags$strong("Reviewed unusual water intake: "),
+                  "High values were retained after manual inspection found no ",
+                  "inconsistencies in accompanying responses. Zero water intake was ",
+                  "also retained because students may drink other beverages. ",
+                  "Unusual values alone were not treated as errors."
+                ),
+                tags$li(
+                  tags$strong("Grouped assessment workflows: "),
+                  "'Gradually' and 'immediately' were grouped as 'consistent'; ",
+                  "'crammed' and 'other' as 'inconsistent' for two-sample comparisons. ",
+                  "This simplifies the analysis, although unspecified 'Other' responses ",
+                  "may not accurately fit the 'inconsistent' category."
+                )
+              )
             )
           )
         ),
