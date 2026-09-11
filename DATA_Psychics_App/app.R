@@ -3,7 +3,6 @@ library(tidyverse)
 library(rstatix)
 library(glue)
 library(plotly)
-library(MKinfer)
 library(bslib)
 
 df <- read_csv(
@@ -539,10 +538,10 @@ ui <- fluidPage(
                   "time to complete the survey, potentially underrepresenting their experiences.")
               ),
               p(
-                "These are potential biases, not confirmed differences. Results should ",
-                "be interpreted within the surveyed cohort and cannot be assumed to ",
-                "represent all University of Sydney students. Associations do not ",
-                "establish cause and effect."
+                "These are potential biases, not confirmed differences. Our results should ",
+                "be interpreted solely within the surveyed cohort and cannot be assumed to ",
+                "represent all University of Sydney students.",
+                "It is also important to remember the associations found in this research do not establish cause and effect."
               )
             ),
             
@@ -923,8 +922,6 @@ ui <- fluidPage(
           p("Ethical Principles: To explore our overall research question, we maintained confidence in our statistical analysis and its limitations, ensuring the methods used produced the best possible results."),
           
           h4("References"),
-          p("Insert any references in APA 7th format that was used for this report, including coding references"),
-          
           p("Australian Government. (n.d.). Hours of work. Fair Work Ombudsman. Retrieved 2 September 2026, from https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work"),
           p("Bollu, P. C., Manjamalai, S., Thakkar, M., & Sahota, P. (2018). Hypersomnia. Missouri Medicine, 115(1), 85–91.")
         )
