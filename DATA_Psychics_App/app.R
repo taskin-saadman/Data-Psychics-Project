@@ -2,6 +2,10 @@ library(shiny)
 library(tidyverse)
 library(rstatix)
 library(glue)
+library(plotly)
+library(MKinfer)
+library(bslib)
+
 df <- read_csv(
   "DATA2X02_data_cleaned.csv",
   show_col_types = FALSE
@@ -56,6 +60,32 @@ ordinal_choices <- c(
   "DATA1X01 Grade" = "grade_1X01",
   "Aspirational DATA2X02 Grade" = "grade_2X02"
 )
+
+#global constants initialisation
+# Unicode glyphs used in the write-up
+mu   <- "μ"   # μ
+sig  <- "σ"   # σ
+neq  <- "≠"   # ≠
+sim  <- "∼"   # ∼
+dots <- "…"   # …
+alp  <- "α"   # α
+
+# Subscripted sample observations used in the assumptions
+X1  <- "X<sub>1</sub>"
+X2  <- "X<sub>2</sub>"
+Xi  <- "X<sub>i</sub>"
+Xnx <- "X<sub>n<sub>X</sub></sub>"
+Y1  <- "Y<sub>1</sub>"
+Y2  <- "Y<sub>2</sub>"
+Yi  <- "Y<sub>i</sub>"
+Yny <- "Y<sub>n<sub>Y</sub></sub>"
+
+# Distribution parameters used in the assumptions
+muX  <- glue("{mu}<sub>X</sub>")
+muY  <- glue("{mu}<sub>Y</sub>")
+sig2 <- glue("{sig}<sup>2</sup>")
+nX   <- "n<sub>X</sub>"
+nY   <- "n<sub>Y</sub>"
 
 hatpc_panel <- function(
     hypothesis,
@@ -116,7 +146,7 @@ hatpc_text_output <- function(title, text) {
 }
 
 ui <- fluidPage(
-  
+  theme = bs_theme(version = 5),
   tags$head(
     tags$link(
       rel = "stylesheet",
@@ -125,7 +155,7 @@ ui <- fluidPage(
     )
   ),
   
-  titlePanel("DATA2902 Psychics"),
+  titlePanel("DATA2902 - Exploring Associations between Student Lifestyle and Academic Factors"),
   
   sidebarLayout(
     
@@ -134,7 +164,7 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'intro'",
         
-        h4("Group Members - L91G07"),
+        h4("Group Members - Data Psychics (L91G07)"),
         tags$ul(
           tags$li("Ahnaf Tahmid Bhuiyan, 560268744"),
           tags$li("Fanxi Liu (Felix), 541011817"),
@@ -284,9 +314,6 @@ ui <- fluidPage(
       conditionalPanel(
         condition = "input.selected_tab == 'question2'",
         
-        #conditionalPanel(
-        #  condition = "input.q2_tab == 'two_sample_q2'",
-        
         h4("Two Sample Mean Test Options"),
         p("Please choose one grouping variable and one numerical/ordinal variable."),
         
@@ -320,11 +347,40 @@ ui <- fluidPage(
             label = "Ordinal Variables:",
             choices = ordinal_choices
           )
+        ),
+        
+        p("Please select which alternative hypothesis to perform."),
+        radioButtons(
+          inputId = "q2_alternative",
+          label = "Alternative hypothesis:",
+          choices = c(
+            "Two-sided (≠)"     = "two.sided",
+            "Greater than (>)"  = "greater",
+            "Less than (<)"     = "less"
+          ),
+          selected = "two.sided"
         )
       ),
       
       conditionalPanel(
         condition = "input.selected_tab == 'question3'",
+        
+        conditionalPanel(
+          condition = "input.q3_tab == 'intro_q3'",
+          h4("Question 3"),
+          p(
+            "The variables for this analysis are fixed by the research question."
+          ),
+          
+          tags$strong("Variables used:"),
+          
+          tags$ul(
+            tags$li("Rental status"),
+            tags$li("DATA1X01/DATA2X02 grade"),
+            tags$li("Sleep hours"),
+            tags$li("DATA2X02 enrolment")
+        )
+      ),
         
         conditionalPanel(
           condition = "input.q3_tab == 'q3_perm_rent'",
@@ -373,6 +429,11 @@ ui <- fluidPage(
             class = "btn-primary"
           )
         )
+      ),
+      
+      conditionalPanel(
+        condition = "input.selected_tab == 'appendix'",
+        p("Thank you for using our R shiny app!")
       )
     ),
     
@@ -380,37 +441,43 @@ ui <- fluidPage(
       tabsetPanel(
         id = "selected_tab",
         
+        
+        #------------------
+        # INTRODUCTION
+        #------------------
         tabPanel(
           title = "INTRODUCTION",
           value = "intro",
           
-          tabsetPanel(
-            id = "intro_tab",
+          accordion(
+            id = "intro_accordion",
+            open = "intro_motivation", #keeps research motivation open by default
             
-            tabPanel(
-              title = "Motivation",
-              value = "intro_motivation",
+            accordion_panel(
+              title = HTML("<h4 style='margin:0;'>Research Motivation</h4>"),
+              id = "intro_motivation",
               
-              h2("Research Motivation"),
               p(
-                "Balancing study, paid work and personal wellbeing can be challenging. ",
+                "As university students, balancing study, paid work and personal wellbeing can be challenging. ",
                 "This app explores how employment, rent, sleep and other lifestyle ",
-                "factors relate to academic performance and course enrolment. ",
-                "These findings may help identify areas for student support."
-              )
+                "factors relate to academic performance, and how academic pressures, in turn, ",
+                "influence students' wellbeing and daily routines. "),
+              p(
+                "These findings may help student services identify areas in need of ",
+                "more targeted support, allowing earlier intervention and better outcomes.")
             ),
             
-            tabPanel(
-              title = "Dataset",
-              value = "intro_dataset",
+            #data description
+            accordion_panel(
+              title = HTML("<h4 style='margin:0;'>Dataset and Context</h4>"),
+              id = "intro_dataset",
               
-              h2("Dataset and Context"),
               tags$ul(
                 tags$li(
                   tags$strong("Source: "),
                   "A voluntary survey of University of Sydney DATA2002 and DATA2902 ",
                   "students in Semester 2, 2026, collected to inform syllabus design ",
-                  "and student learning pathways and supplied for this group project."
+                  "and student learning pathways. The resulting dataset supplied for this group project."
                 ),
                 tags$li(
                   tags$strong("Collection: "),
@@ -423,35 +490,53 @@ ui <- fluidPage(
                 ),
                 tags$li(
                   tags$strong("Main topics: "),
-                  "Demographics and lifestyle, academic background and study behaviour, ",
-                  "and weekly learning choices."
+                  tags$ol(
+                    tags$li(
+                      tags$strong("Demographic and Lifestyle: "),
+                      "Age (years), height (cm), domestic or international status, whether the student pays rent (and how much per week), ",
+                      "hours of paid employment per week, hours of sleep per night, litres of water consumed per day, number of languages spoken fluently, ",
+                      "and favourite music genre."
+                    ),
+                    tags$br(),
+                    tags$li(
+                      tags$strong("Academic Background and Study Behaviour: "),
+                      "Unit enrolment (DATA2002 or DATA2902), grade achieved in the DATA1001/1901 prerequisite, ",
+                      "grade hoped for in DATA2002/2902, typical approach to assessments (e.g. gradually, crammed, immediately), ",
+                      "and commute time to campus in minutes."
+                    ),
+                    tags$br(),
+                    tags$li(
+                      tags$strong("Weekly learning choices: "),
+                      "The learning pathway and lecture delivery mode the student chose that week, along with a free-text explanation of the factors behind each choice. ",
+                      "It also included a boolean response on whether the student multi-tasks during lectures, what tasks they do, and why."
+                    )
+                  )
                 )
               )
             ),
             
-            tabPanel(
-              title = "Sampling and Biases",
-              value = "intro_biases",
+            #random sampling and potential biases
+            accordion_panel(
+              title = HTML("<h4 style='margin:0;'>Sampling and Potential Biases</h4>"),
+              id = "intro_biases",
               
-              h2("Sampling and Potential Biases"),
               p(
                 tags$strong("This is not a random sample. "),
                 "All enrolled DATA2X02 students were invited, but individuals chose ",
                 "whether to respond. This was an attempted census of the cohort with ",
-                "voluntary participation, rather than random selection."
-              ),
+                "voluntary participation, rather than random selection."),
               tags$ul(
                 tags$li(
-                  tags$strong("Voluntary response bias: "),
-                  "Students with stronger opinions or greater engagement may have ",
-                  "been more willing to participate, overrepresenting their experiences."
-                ),
+                  tags$strong("Self-report bias: "),
+                  "Students are trusted to report their own behaviours,",
+                  "but their recall and perception of experience such as sleep duration or water consumption may be imprecise.",
+                  "Because these values are not objectively measured, self-reported responses can be affected by",
+                  "misremembering, rough estimation, or exaggeration, leading to inaccurate data."),
                 tags$li(
                   tags$strong("Non-response bias: "),
                   "Students who did not respond may differ systematically from respondents. ",
                   "For example, students with heavier work commitments may have had less ",
-                  "time to complete the survey, potentially underrepresenting their experiences."
-                )
+                  "time to complete the survey, potentially underrepresenting their experiences.")
               ),
               p(
                 "These are potential biases, not confirmed differences. Results should ",
@@ -461,11 +546,11 @@ ui <- fluidPage(
               )
             ),
             
-            tabPanel(
-              title = "Survey Improvements",
-              value = "intro_survey",
+            #survey improvements
+            accordion_panel(
+              title = HTML("<h4 style='margin:0;'>Survey Improvements</h4>"),
+              id = "intro_survey",
               
-              h2("Survey Questions Needing Improvement"),
               tags$ul(
                 tags$li(
                   tags$strong("Rent status and amount: "),
@@ -486,11 +571,12 @@ ui <- fluidPage(
               )
             ),
             
-            tabPanel(
-              title = "Data Cleaning",
-              value = "intro_cleaning",
+            #data cleaning
+            accordion_panel(
+              title = HTML("<h4 style='margin:0;'>Data Cleaning</h4>"),
+              id = "intro_cleaning",
               
-              h2("Data Cleaning Process"),
+              p("To process the overall dataset, various work was done to ensure accurate data representation and allow efficient statistical analysis:"),
               tags$ol(
                 tags$li(
                   tags$strong("Standardised variables: "),
@@ -538,13 +624,15 @@ ui <- fluidPage(
           )
         ),
         
+        #----------------
+        # QUESTION 1
+        #----------------
+        
         tabPanel(
           title = "QUESTION 1",
           value = "question1",
           
-          h3(
-            "Employment, DATA2002/DATA2902 Enrolment, and Weekly Paid Work"
-          ),
+          h3("Chi-Square tests for Employment, DATA2002/DATA2902 Enrolment, and Weekly Paid Work"),
           
           tabsetPanel(
             id = "q1_tab",
@@ -653,6 +741,9 @@ ui <- fluidPage(
           )
         ),
         
+        #---------------
+        # QUESTION 2
+        #---------------
         tabPanel(
           title = "QUESTION 2",
           value = "question2",
@@ -700,9 +791,6 @@ ui <- fluidPage(
                 \"Employment Hours (hours)\" as numerical variable. This is because the \"no\" group for
                 both grouping variables correspond to a numerical value of zero in the corresponding
                 numerical variable.")),
-              
-              h4("Significance Level"),
-              p("All hypothesis tests use a significance level of α = 0.05."),
             ),
             
             #second tabset
@@ -749,11 +837,14 @@ ui <- fluidPage(
               value = "two_sample_q2",
               
               plotOutput("out2_graph"),
-              uiOutput("out2_test")
+              uiOutput("out2_t_haptc")
+              )
             )
-          )
-        ),
+          ),
         
+        #--------------
+        # QUESTION 3
+        #--------------
         tabPanel(
           title = "QUESTION 3",
           value = "question3",
@@ -783,9 +874,6 @@ ui <- fluidPage(
               for the Monte Carlo simulations, and (for the rental status tab) which 
                 grade variable to use. The program will then conduct the 
                 simulations and automatically update the results."),
-              
-              h4("Significance Level"),
-              p("All hypothesis tests use a significance level of α = 0.05.")
             ),
             
             tabPanel(
@@ -847,9 +935,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
   q2_xvar <- reactive(input$drop2_xvar)
-  
   q2_yvar <- reactive(if (input$yvar_type == "Numerical") input$drop2_yvar_num else input$drop2_yvar_ord)
   
   # -------------------------------------------------------
@@ -940,13 +1026,13 @@ server <- function(input, output) {
     )
   })
   
-  output$q2_violin_box <- renderPlot({
+  output$q2_violin_box <- renderPlotly({
     d <- q2_plot_data()
     labs_q2 <- q2_plot_labels()
     
-    ggplot(d, aes(x = group, y = value, fill = group)) +
-      geom_violin(width = 1.0, colour = "#e9ecef") +
-      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", alpha = 0.9, outlier.size = 1) +
+    p <- ggplot(d, aes(x = group, y = value, fill = group)) +
+      geom_violin(width = 1.0, colour = "#e9ecef", alpha = 0.8) +
+      geom_boxplot(width = 0.12, fill = "white", colour = "grey25", outlier.size = 1) +
       scale_fill_manual(values = c("#69b3a2", "#404080")) +
       labs(
         title = paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group),
@@ -954,6 +1040,8 @@ server <- function(input, output) {
         y = labs_q2$value) +
       theme_minimal() +
       theme(legend.position = "none")
+    
+    ggplotly(p, tooltip = c("text")) |> plotly::style(hoverinfo = "none", traces = 1:2)
   })
   
   
@@ -967,7 +1055,7 @@ server <- function(input, output) {
     labs_q2 <- q2_plot_labels()
     
     df %>% ggplot(aes_string(x = yvar, fill = xvar)) +
-      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity') 
+      (if (input$yvar_type == "Numerical") geom_histogram(color="#e9ecef", position = 'identity')
        else geom_bar(color="#e9ecef", position = 'identity')) +
       scale_fill_manual(values=c("#69b3a2", "#404080")) +
       labs(fill="",
@@ -978,42 +1066,25 @@ server <- function(input, output) {
       theme_minimal() 
   })
   
-  output$out2_test <- renderUI({
-    
+  output$out2_t_haptc <- renderUI({
     alpha <- 0.05
+    alt <- input$q2_alternative
     
-    # Unicode glyphs used in the write-up
-    mu   <- "μ"   # μ
-    sig  <- "σ"   # σ
-    neq  <- "≠"   # ≠
-    sim  <- "∼"   # ∼
-    dots <- "…"   # …
-    alp  <- "α"   # α
+    #evaluates what alt will be and changes the alt hyp accordingly
+    h1_symbol <- switch(alt,
+                        "two.sided" = "≠",
+                        "greater"   = ">",
+                        "less"      = "<")
     
-    # Subscripted sample observations used in the assumptions
-    X1  <- "X<sub>1</sub>"
-    X2  <- "X<sub>2</sub>"
-    Xi  <- "X<sub>i</sub>"
-    Xnx <- "X<sub>n<sub>X</sub></sub>"
-    Y1  <- "Y<sub>1</sub>"
-    Y2  <- "Y<sub>2</sub>"
-    Yi  <- "Y<sub>i</sub>"
-    Yny <- "Y<sub>n<sub>Y</sub></sub>"
+    direction_phrase <- switch(alt,
+                               "two.sided" = "significantly differs",
+                               "greater"   = "is greater in the",
+                               "less"      = "is lower in the")
     
-    # Distribution parameters used in the assumptions
-    muX  <- glue("{mu}<sub>X</sub>")
-    muY  <- glue("{mu}<sub>Y</sub>")
-    sig2 <- glue("{sig}<sup>2</sup>")
-    nX   <- "n<sub>X</sub>"
-    nY   <- "n<sub>Y</sub>"
-    
-    hypothesis <- p(HTML(glue("H₀: {mu}<sub>x</sub> = {mu}<sub>y</sub> <br>
-                              H₁: {mu}<sub>x</sub> {neq} {mu}<sub>y</sub>")))
+    hypothesis <- glue("H₀: μx = μy. H₁: μx {h1_symbol} μy.")
     
     xvar <- input$drop2_xvar
-    
     groups <- levels(df[[xvar]])
-    
     grouping_var <- names(nominal_choices)[nominal_choices == xvar]
     
     #identify which raw name was selected based on the active radio button
@@ -1022,7 +1093,7 @@ server <- function(input, output) {
     #combine lists to map backend name back to its display label
     all_choices <- c(numeric_choices, ordinal_choices)
     clean_label <- names(all_choices)[all_choices == raw_val]
-    
+
     if (input$yvar_type == "Numerical") {
       
       yvar <- input$drop2_yvar_num
@@ -1043,6 +1114,7 @@ server <- function(input, output) {
         tt <- df |>
           t.test(
             formula = f,
+            alternative = alt,
             data = _
           )
       } else {
@@ -1052,6 +1124,7 @@ server <- function(input, output) {
           t.test(
             formula = f,
             var.equal = TRUE,
+            alternative = alt,
             data = _
           )
       }
@@ -1072,7 +1145,7 @@ server <- function(input, output) {
         }
         
         variance_clause <- glue(
-          "Using Levene's test, as {lev} is greater than 0.05, X and Y have similar ",
+          "Using Levene's test, as p-value = {lev} is greater than 0.05, X and Y have similar ",
           "variances and the Student's t-test is used."
         )
         
@@ -1081,7 +1154,7 @@ server <- function(input, output) {
         indep_clause <- glue("{Xi} and {Yi} are independent and have equal variance.")
         
         variance_clause <- glue(
-          "Using Levene's test, as {lev} is less than 0.05, X and Y have different ",
+          "Using Levene's test, as p-value = {lev} is less than 0.05, X and Y have different ",
           "variances and the Welch's t-test is used."
         )
       }
@@ -1098,13 +1171,19 @@ server <- function(input, output) {
       )))
       
       conclusion <- if (reject) {
-        p(HTML(glue("Since the p-value < 0.05, we reject H₀.
-        There is a significant difference in mean ", clean_label, " 
-        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
+        p(HTML(glue(
+          "Since the p-value < {alpha}, we reject H₀. There is evidence that the mean ",
+          clean_label, " ", direction_phrase, " ",
+          if (alt == "two.sided") glue("between {groups[1]} and {groups[2]} groups for {grouping_var}.")
+          else glue("{groups[1]} group than the {groups[2]} group for {grouping_var}.")
+        )))
       } else {
-        p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
-        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
-        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
+        p(HTML(glue(
+          "Since the p-value > {alpha}, we do not reject H₀. ",
+          "We do not have sufficient evidence to conclude that the mean ", clean_label, " ", direction_phrase, " ",
+          if (alt == "two.sided") glue("between {groups[1]} and {groups[2]} groups for {grouping_var}.")
+          else glue("{groups[1]} group compared to the {groups[2]} group for {grouping_var}.")
+        )))
       }
       
     } else {
@@ -1119,6 +1198,7 @@ server <- function(input, output) {
       
       wt <- wilcox.test(
         formula = f,
+        alternative = alt,
         data = df
       )
       
@@ -1135,13 +1215,19 @@ server <- function(input, output) {
       )))
       
       conclusion <- if (reject) {
-        p(HTML(glue("Since the p-value < 0.05, we reject H₀.
-        There is a significant difference in mean ", clean_label, " 
-        between the ", groups[1], " and ", groups[2],  " ", grouping_var, " groups.")))
+        p(HTML(glue(
+          "Since the p-value < {alpha}, we reject H₀. There is evidence that the mean ",
+          clean_label, " ", direction_phrase, " ",
+          if (alt == "two.sided") glue("between {groups[1]} and {groups[2]} groups for {grouping_var}.")
+          else glue("{groups[1]} group than the {groups[2]} group for {grouping_var}.")
+        )))
       } else {
-        p(HTML(glue("Since the p-value > 0.05, we do not reject H₀.
-        We do not have sufficient evidence to conclude that there is a difference in mean ", clean_label, "
-        between the ", groups[1], " and ", groups[2], " ", grouping_var, " groups.")))
+        p(HTML(glue(
+          "Since the p-value > {alpha}, we do not reject H₀. ",
+          "We do not have sufficient evidence to conclude that the mean ", clean_label, " ", direction_phrase, " ",
+          if (alt == "two.sided") glue("between {groups[1]} and {groups[2]} groups for {grouping_var}.")
+          else glue("{groups[1]} group compared to the {groups[2]} group for {grouping_var}.")
+        )))
       }
     }
     
