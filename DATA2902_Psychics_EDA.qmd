@@ -1,0 +1,151 @@
+---
+title: "DATA2902_EDA"
+format: html
+editor: visual
+---
+
+## Load libraries
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(janitor)
+```
+
+Load dataset, clean column names, convert to appropriate data types, set strings to lowercase
+
+```{r}
+df <- read.csv("DATA2X02_2026_2_survey_clean.csv")
+#glimpse(df)
+
+# CLEAN COLUMN NAMES
+df_short <- clean_names(df)
+#summary(df_clean_names)
+
+# REMOVE THE FIRST COLUMN (FULL RESPONSE)
+df_short <- df_short[, -1]
+#summary(df_short)
+colnames(df_short) <- c("age_years",
+                        "height_cm",
+                        "intl_dom_type",
+                        "type_2X02",
+                        "grade_1X01",
+                        "grade_2X02",
+                        "assessment_workflow",
+                        "travel_to_campus_min",
+                        "rent_y_n",
+                        "rent_dollars",
+                        "employment_hours",
+                        "sleep_hours",
+                        "music_type",
+                        "aliens_y_n",
+                        "water_l",
+                        "languages_number",
+                        "learning_pathway_n",
+                        "learning_pathway_why",
+                        "rev_lec_n",
+                        "rev_lec_why",
+                        "multitask_y_n",
+                        "multitask_n",
+                        "multitask_why")
+
+# FACTOR CATEGORICAL VARIABLES
+df_short <- df_short |>
+  mutate(across(c("intl_dom_type", 
+                  "type_2X02",
+                  "grade_1X01",
+                  "grade_2X02",
+                  "assessment_workflow",
+                  "rent_y_n",
+                  "music_type",
+                  "aliens_y_n",
+                  "languages_number",
+                  "learning_pathway_n",
+                  "rev_lec_n",
+                  "multitask_y_n"), as.factor))
+
+# CHANGE RELEVANT CATEGORICAL VARIABLES TO ORDINAL
+df_short <- df_short |>
+  mutate(across(c("grade_1X01", "grade_2X02"), 
+                ~ factor(.x, 
+                         levels = c("P", "CR", "D", "HD"), 
+                         ordered = TRUE)))
+
+# CREATING NEW COLUMN: EMPLOYMENT STATUS
+df_short <- df_short %>% mutate(employment_y_n = case_when(
+  employment_hours == 0 ~ 0,
+  employment_hours > 0 ~ 1,
+  TRUE ~ NA_integer_
+  ), .before = employment_hours) %>%
+  mutate(employment_y_n = factor(employment_y_n, 
+                                 levels = c(1,0), 
+                                 labels = c("yes", "no")))
+
+
+# SET ALL STRINGS TO LOWERCASE
+df_short <- df_short |>
+    mutate(learning_pathway_why = str_to_lower(learning_pathway_why)) %>%
+    mutate(multitask_why = str_to_lower(multitask_why))
+
+glimpse(df_short)
+```
+
+## 
+
+```{r}
+#selecting dataset with specific variables
+grouping <- c("intl_dom_type", 
+              "type_2X02",
+              "assessment_workflow",
+              "rent_y_n",
+              "employment_y_n",
+              "multitask_y_n",
+              "multitask_n")
+
+ordinal <- c("grade_1X01", "grade_2X02")
+
+numerical <- c("travel_to_campus_min", "rent_dollars", "employment_hours", "sleep_hours", "water_l")
+
+df_clean <- df_short %>% select(all_of(c(grouping, ordinal, numerical)))
+
+#changing y/n responses in rent based on numerical value of rent
+df_clean <- df_clean %>% 
+  mutate(rent_y_n = if_else(rent_dollars == 0, "no", "yes")) %>%
+  mutate(rent_y_n = if_else(rent_dollars > 0, "yes", "no"))
+
+df_clean <- df_clean %>% 
+  mutate(multitask_y_n = if_else(multitask_n == "[]", "no", multitask_y_n)) %>%
+  mutate(multitask_y_n = if_else(multitask_n != "[]", "yes", multitask_y_n))
+
+df_clean <- subset(df_clean, select = -multitask_n) #removing multitask column as no longer needed
+
+df_clean[4:6]<-lapply(df_clean[4:6],factor) #refactorising categorical variables
+
+#filtering outliers and unreasonable values from numerical variables
+df_clean <- df_clean %>% filter(travel_to_campus_min <= (4 * 60)) #based on background knowledge
+
+
+df_clean <- df_clean %>% filter(employment_hours <= (38 * 1.5)) #based on FairWork Ombudsman: An employee can work a maximum of 38 hours in a week unless an employer asks them to work reasonable extra hours, assuming student may work 2 full-time jobs somehow
+
+
+df_clean <- df_clean %>% filter(sleep_hours <= 20) #decided based on hypersomnia (disorder that causes excessive sleep) criteria of sleeping up to 18 hours a day. 
+
+df_clean <- df_clean %>% 
+  mutate(sleep_hours = if_else(sleep_hours == 0, median(sleep_hours), sleep_hours)) #physically impossible for someone to sleep 0 hours per night, replace with median
+
+#grouping assessment workflow together for two groups
+df_clean <- df_clean %>% mutate(workflow_grouped = case_when(
+  assessment_workflow == "Gradually" | 
+    assessment_workflow == 
+    "Immediately" ~ 0,
+  .default = 1), .after = "assessment_workflow") %>%
+  mutate(workflow_grouped = factor(workflow_grouped, 
+                                 levels = c(0,1), 
+                                 labels = c("Consistent", "Inconsistent")))
+  
+summary(df_clean) #inspecting before exporting
+
+#exporting to csv file for shiny app usage
+write.csv(df_clean, "DATA2X02_data_cleaned.csv", row.names = F)
+```
