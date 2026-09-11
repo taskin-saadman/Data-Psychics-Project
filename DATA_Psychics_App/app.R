@@ -581,7 +581,7 @@ ui <- fluidPage(
                   tags$strong("Standardised variables: "),
                   "Renamed columns for clarity and retained variables relevant to ",
                   "the research questions. Categorical variables were converted to ",
-                  "factors; the app codes grades as P = 1, CR = 2, D = 3 and HD = 4 ",
+                  "factors; the app coded grades as P = 1, CR = 2, D = 3 and HD = 4 ",
                   "to preserve their ranking."
                 ),
                 tags$li(
@@ -608,15 +608,17 @@ ui <- fluidPage(
                   tags$strong("Reviewed unusual water intake: "),
                   "High values were retained after manual inspection found no ",
                   "inconsistencies in accompanying responses. Zero water intake was ",
-                  "also retained because students may drink other beverages. ",
+                  "also retained because students might drink other beverages. ",
                   "Unusual values alone were not treated as errors."
                 ),
                 tags$li(
                   tags$strong("Grouped assessment workflows: "),
                   "'Gradually' and 'immediately' were grouped as 'consistent'; ",
-                  "'crammed' and 'other' as 'inconsistent' for two-sample comparisons. ",
-                  "This simplifies the analysis, although unspecified 'Other' responses ",
-                  "may not accurately fit the 'inconsistent' category."
+                  "'cram' and 'other' as 'inconsistent' for two-sample comparisons. ",
+                  "This simplified the analysis, although unspecified 'Other' responses ",
+                  "might not accurately fit the 'inconsistent' category. Nevertheless, ",
+                  "they were included as they only made up a minority (8 responses out ",
+                  "of 659) of all responses."
                 )
               )
             )
@@ -810,7 +812,7 @@ ui <- fluidPage(
                 p("The violin and box plots show the shape of each group's distribution, as well as
                   the median, interquartile range and outliers. Comparing the widths of the two
                   violins gives a visual check of the equal variance assumption."),
-                plotOutput("q2_violin_box"),
+                plotlyOutput("q2_violin_box"),
                 
                 h4("Levene's test of equal variance"),
                 p("Levene's test gives a numerical value to the equality of variances between two
@@ -1027,6 +1029,7 @@ server <- function(input, output) {
   output$q2_violin_box <- renderPlotly({
     d <- q2_plot_data()
     labs_q2 <- q2_plot_labels()
+    title_q2 <- paste0("Distribution of ", labs_q2$value, " by ", labs_q2$group)
     
     p <- ggplot(d, aes(x = group, y = value, fill = group)) +
       geom_violin(width = 1.0, colour = "#e9ecef", alpha = 0.8) +
@@ -1039,7 +1042,30 @@ server <- function(input, output) {
       theme_minimal() +
       theme(legend.position = "none")
     
-    ggplotly(p, tooltip = c("text")) |> plotly::style(hoverinfo = "none", traces = 1:2)
+    gg_family <- "Arial, Helvetica, sans-serif"
+    axis_title_font <- list(family = gg_family, size = 11, color = "black")
+    axis_tick_font <- list(family = gg_family, size = 8.8, color = "grey30")
+    
+    ggplotly(p, tooltip = c("text")) |>
+      plotly::style(hoverinfo = "none", traces = 1:2) |>
+      plotly::layout(
+        font = list(family = gg_family, size = 11, color = "black"),
+        title = list(
+          text = title_q2,
+          font = list(family = gg_family, size = 13.2, color = "black"),
+          x = 0, xref = "paper", xanchor = "left",
+          y = 0.97, yanchor = "top"
+        ),
+        xaxis = list(
+          title = list(text = labs_q2$group, font = axis_title_font),
+          tickfont = axis_tick_font
+        ),
+        yaxis = list(
+          title = list(text = labs_q2$value, font = axis_title_font),
+          tickfont = axis_tick_font
+        ),
+        margin = list(t = 45)
+      )
   })
   
   
