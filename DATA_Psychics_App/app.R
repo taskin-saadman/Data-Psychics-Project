@@ -458,8 +458,8 @@ ui <- fluidPage(
               
               p(
                 "As university students, balancing study, paid work and personal wellbeing can be challenging. ",
-                "This app explores how employment, rent, sleep and other lifestyle ",
-                "factors relate to academic performance, and how academic pressures, in turn, ",
+                "This app explores how lifestyle factos like employment, rent, sleep ",
+                "relate to academic performance, and how academic pressures, in turn, ",
                 "influence students' wellbeing and daily routines. "),
               p(
                 "These findings may help student services identify areas in need of ",
@@ -527,15 +527,16 @@ ui <- fluidPage(
               tags$ul(
                 tags$li(
                   tags$strong("Self-report bias: "),
-                  "Students are trusted to report their own behaviours,",
-                  "but their recall and perception of experience such as sleep duration or water consumption may be imprecise.",
+                  "Students are trusted to report their own behaviours, but their ",
+                  "recall and perception of experience such as sleep duration or water consumption may be imprecise.",
                   "Because these values are not objectively measured, self-reported responses can be affected by",
                   "misremembering, rough estimation, or exaggeration, leading to inaccurate data."),
                 tags$li(
                   tags$strong("Non-response bias: "),
                   "Students who did not respond may differ systematically from respondents. ",
-                  "For example, students with heavier work commitments may have had less ",
-                  "time to complete the survey, potentially underrepresenting their experiences.")
+                  "For example, students with heavier work commitments or hidden disabilities may ",
+                  "be less likely to have seen and completed the survey, potentially underrepresenting ",
+                  "their experiences.")
               ),
               p(
                 "These are potential biases, not confirmed differences. Our results should ",
@@ -620,6 +621,8 @@ ui <- fluidPage(
                   "they were included as they only made up a minority (8 responses out ",
                   "of 659) of all responses."
                 )
+              ),
+              p("The final dataset used in the app has 659 rows of responses and 14 columns."
               )
             )
           )
@@ -646,10 +649,10 @@ ui <- fluidPage(
               
               p(
                 "Is being in paid employment associated with enrolment ",
-                "in DATA2002 versus DATA2902, and among employed students, ",
+                "in DATA2002 or DATA2902; and among employed students, ",
                 "do DATA2902 students work fewer hours per week than DATA2002 ",
-                "students, once the different mix of Domestic and International ",
-                "students is taken into account?"
+                "students, once the students' status (Domestic or International) ",
+                "is taken into account?"
               ),
               
               h4("Analysis"),
@@ -672,7 +675,7 @@ ui <- fluidPage(
                   "Domestic/International student status."
                 ),
                 tags$li(
-                  "Weekly employment hours are numerical and therefore are ",
+                  "Weekly employment hours are numerical and are therefore ",
                   "not analysed using a chi-square test."
                 )
               ),
@@ -763,16 +766,16 @@ ui <- fluidPage(
               uiOutput("rq_q2"),
               
               p("To evaluate the research question based on the selected variables, 
-                our program detects which two sample test is most suitable following the assumptions:"),
+                our app detects which two sample test is most suitable following the assumptions:"),
               
-              h5("Student Two Sample T-Test"),
+              h5("Student's Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
                 tags$li("Homogeneity of variance: population variances of both groups are equal, checked using Levene's test."),
                 tags$li("Normality: Central Limit Theorem applies as n ≥ 30 for both groups of all categories.")),
               
-              h5("Welch Two Sample T-Test"),
+              h5("Welch's Two Sample T-Test"),
               tags$ul(
                 tags$li("Quantitative: data values collected are quantitative."),
                 tags$li("Independence within and between groups: each row represents an individual student's survey response."),
@@ -783,8 +786,8 @@ ui <- fluidPage(
                 tags$li("Independence: groups are independent of one another."),
                 tags$li("Same Distribution: groups follow the same distribution, differing by shift.")),
               
-              p("If a numerical variable is chosen, then the program will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
-                If the p-value is small (< 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
+              p("If a numerical variable is chosen, then the app will run a two sample t-test. We check if the groups have equal variances via a Levene's test.
+                If the p-value is large (> 0.05), we conduct a Student t-test; otherwise, we conduct a Welch t-test. 
                 For ordinal data, the Wilcoxon Rank-Sum test is conducted."),
               
               p(HTML("<b> Note: </b>Please do not set \"Rental Status (y/n)\" as grouping variable and \"Weekly Rent (dollars)\" as
@@ -804,8 +807,8 @@ ui <- fluidPage(
                 
                 h4("Q-Q Plot: Visual check for normality"),
                 p("The Q-Q plots below serve as an additional visual check if the data is normally distributed.
-                  However, for the purposes of our analysis, as the sample is large, we assume Central Limit Theorem applies
-                  for the means of both groups, ensuring the normality assumption holds."),
+                  However, for the purposes of our analysis, as the sample is large, we assume Central Limit 
+                  Theorem applies for the means of both groups, bypassing the normality assumption."),
                 plotOutput("q2_qqplot"),
                 
                 h4("Violin and box plots: Visual check for distribution and spread"),
@@ -816,11 +819,10 @@ ui <- fluidPage(
                 
                 h4("Levene's test of equal variance"),
                 p("Levene's test gives a numerical value to the equality of variances between two
-                  groups. To conduct it, it can be assumed that the variance of one group is independent to that
-                  of the other group."),
+                  groups. To conduct it, it can be assumed that the variance of one group is independent from the other group."),
                 p("The null hypothesis states that the variances are equal across groups.
-                  Hence, a small p-value of less than 0.05 indicates homogeneity of variance across groups, 
-                  while a large p-value indicates significantly different variances, so the equal variance assumption is violated."),
+                  Hence, a large p-value of greater than 0.05 indicates homogeneity of variance across groups, 
+                  while a small p-value indicates significantly different variances, so the equal variance assumption is violated."),
                 uiOutput("q2_levene")
               ),
               
@@ -834,7 +836,7 @@ ui <- fluidPage(
             
             #third tabset
             tabPanel(
-              title = "Two Sample test",
+              title = "Two Sample Test",
               value = "two_sample_q2",
               
               plotOutput("out2_graph"),
@@ -867,13 +869,13 @@ ui <- fluidPage(
               h4("Analysis"),
               p(
                 "This research question involves conducting a Monte Carlo 
-                permutation test, which is resampling‑based test that compares 
+                permutation test, which is a resampling‑based test that compares 
                 the observed mean differences expected by pure random change when
                 group labels are shuffled."),
               
               p("In the subsequent tabs, please choose your desired resampling size 
               for the Monte Carlo simulations, and (for the rental status tab) which 
-                grade variable to use. The program will then conduct the 
+                grade variable to use. The app will then conduct the 
                 simulations and automatically update the results."),
             ),
             
@@ -916,7 +918,7 @@ ui <- fluidPage(
           h4("AI Usage Statement"),
           p("Taskin - I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me."),
           p("Felix - I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts."),
-          p("Nadh - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it."),
+          p("Nadhira - I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it."),
           p("Tuhin - I used Sonnet 5 by Claude to assist with CSS bugs and Gemini Plus to help with resampling graphs"),
           
           h4("ISI Professional Ethics Statement"),
@@ -926,7 +928,7 @@ ui <- fluidPage(
           h4("References"),
           p("Australian Government. (n.d.). Hours of work. Fair Work Ombudsman. Retrieved 2 September 2026, from https://www.fairwork.gov.au/employment-conditions/hours-of-work-breaks-and-rosters/hours-of-work"),
           p("Bollu, P. C., Manjamalai, S., Thakkar, M., & Sahota, P. (2018). Hypersomnia. Missouri Medicine, 115(1), 85–91."),
-          p("https://stackoverflow.com/a/61276959, by lauren.marietta")
+          p("lauren.marietta. (2020, April 17). [Reply to online forum post ggplotly - only return tooltip hover text on certain geom objects]. stackoverflow. https://stackoverflow.com/a/61276959")
         )
       )
     )
@@ -954,7 +956,7 @@ server <- function(input, output) {
     clean_label <- names(all_choices)[all_choices == raw_val]
     
     p(paste0("Is there a difference in the means of student's ", clean_label, 
-             " when divided by ", grouping_var, "?"))
+             " when grouped by ", grouping_var, "?"))
   })
   
   # -------------------------------------------------------
@@ -1341,8 +1343,8 @@ server <- function(input, output) {
     
     assumptions <- p(HTML(glue(
       "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
-      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
-      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
+      "Under the null hypothesis (H₀), the two groups are interchangeable and follow, ",
+      "the same underlying distribution (i.e., they have identical shapes and variances).")))
     
     test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
     
@@ -1483,8 +1485,8 @@ server <- function(input, output) {
     
     assumptions <- p(HTML(glue(
       "X<sub>1</sub>, {dots} , X<sub>n<sub>x</sub></sub> and Y<sub>1</sub>, {dots} , Y<sub>n<sub>y</sub></sub> are independent random samples. ",
-      "Under the null hypothesis (H₀), both groups are exchangeable and follow, ",
-      "the same underlying distribution (i.e., they follow identical shapes and variances.)")))
+      "Under the null hypothesis (H₀), the two groups are interchangeable and follow, ",
+      "the same underlying distribution (i.e., they have identical shapes and variances).")))
     
     test_statistic <- glue("Under H₀, the test statistic is the observed difference, ",  round(res$obs_diff, 4))
     
