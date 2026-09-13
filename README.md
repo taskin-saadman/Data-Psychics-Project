@@ -1,4 +1,4 @@
-![image](https://github.sydney.edu.au/user-attachments/assets/3c25e97e-4b8a-4be4-8f1c-d6f58abdd724)# DATA2902 Group Project 1 - DATA Psychics
+# DATA2902 Group Project 1 - DATA Psychics
 
 # Documentation
 ## GitHub Repository: https://github.sydney.edu.au/tbis0085/DATA2902-Psychics/tree/main 
