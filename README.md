@@ -1,8 +1,8 @@
-# DATA2902 Group Project 1 - DATA Psychics
+![image](https://github.sydney.edu.au/user-attachments/assets/3c25e97e-4b8a-4be4-8f1c-d6f58abdd724)# DATA2902 Group Project 1 - DATA Psychics
 
 # Documentation
 ## GitHub Repository: https://github.sydney.edu.au/tbis0085/DATA2902-Psychics/tree/main 
-## Shiny App:  https://taskin-saadman.shinyapps.io/DATA_Psychics_App/
+## Shiny App: https://fliu0227.shinyapps.io/DATA_Psychics_App/
 
 The shiny app investigates how different lifestyle factors are associated with academic performance, and vice versa, via Chi-Square tests, Two Sample tests, and Monte Carlo permutation tests. The relevant tabs with each test are titled Question 1, Question 2, and Question 3, respectively. The introduction and appendix tabs give context to the research process and resources used.
 
@@ -40,5 +40,5 @@ As the program does not set a random seed, every click of the "Run Permutation T
 ## AI Usage Statements
 - Taskin: I used GPT 5.6 Sol by OpenAI for helping me with the coding part (tabs) and suggesting me statistical approaches for the chi-squared test tabs. All of the work was reviewed by me.
 - Felix: I used Opus 5 by Claude to help with formatting the written portion of the statistical tests, including symbols and sub/superscripts.
-- Nadh: I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it.
+- Nadhira: I used Gemini to clarify the framework of the Monte Carlo resampling test, including how to apply a HAPTC framework onto it.
 - Tuhin: I used Sonnet 5 by Claude to assist with CSS bugs and Gemini Plus to help with resampling graphs
