@@ -1,7 +1,18 @@
 # DATA2902 Group Project 1 - DATA Psychics
 
 # Documentation
-## GitHub Repository: https://github.sydney.edu.au/tbis0085/DATA2902-Psychics/tree/main 
+## Repository Notice & Attribution
+
+> **Academic Project - Repository Mirror**
+>
+> This repository is a personal mirror of the original [DATA2902-Psychics repository](https://github.sydney.edu.au/tbis0085/DATA2902-Psychics), developed collaboratively as part of **DATA2902 at the University of Sydney**.
+>
+> The mirror is maintained for **academic reference and portfolio purposes**. The project is the collective work of its student contributors, and its presence on this personal GitHub account does not imply sole authorship.
+>
+> **Data ownership and usage:** The dataset used in this project was provided through the University of Sydney DATA2X02 Team for educational purposes. All rights to the dataset remain with the University and/or its respective rights holders, as applicable. No permission to redistribute, reproduce, or commercially reuse the dataset is implied by this repository.
+>
+> The University of Sydney does not endorse or officially maintain this personal mirror.
+
 ## Shiny App: https://fliu0227.shinyapps.io/DATA_Psychics_App/
 
 The shiny app investigates how different lifestyle factors are associated with academic performance, and vice versa, via Chi-Square tests, Two Sample tests, and Monte Carlo permutation tests. The relevant tabs with each test are titled Question 1, Question 2, and Question 3, respectively. The introduction and appendix tabs give context to the research process and resources used.
